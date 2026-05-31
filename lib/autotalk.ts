@@ -20,14 +20,17 @@ export const DEFAULT_SETTINGS: AutoTalkSettings = {
   deliveryMode: "followUp",
 };
 
+/** Path to the global AutoTalk settings JSON file under `~/.pi`. */
 export function getSettingsPath(): string {
   return join(homedir(), ".pi", "agent", "extensions", "autotalk", "settings.json");
 }
 
+/** Returns true when `value` is a supported AutoTalk delivery mode. */
 export function isDeliveryMode(value: unknown): value is DeliveryMode {
   return value === "followUp" || value === "steer";
 }
 
+/** Coerces unknown persisted settings into a valid `AutoTalkSettings` object. */
 export function normalizeSettings(value: unknown): AutoTalkSettings {
   if (!value || typeof value !== "object") return { ...DEFAULT_SETTINGS };
 
@@ -40,6 +43,7 @@ export function normalizeSettings(value: unknown): AutoTalkSettings {
   return { intervalSec, deliveryMode };
 }
 
+/** Parses an interval in seconds; returns `undefined` when out of range or invalid. */
 export function normalizeInterval(value: unknown): number | undefined {
   if (typeof value === "string" && value.trim() !== "") {
     return normalizeInterval(Number(value));
@@ -50,6 +54,7 @@ export function normalizeInterval(value: unknown): number | undefined {
   return value;
 }
 
+/** Loads settings from disk, falling back to defaults when the file is missing or invalid. */
 export async function loadSettings(path = getSettingsPath()): Promise<AutoTalkSettings> {
   try {
     const text = await readFile(path, "utf8");
@@ -59,6 +64,7 @@ export async function loadSettings(path = getSettingsPath()): Promise<AutoTalkSe
   }
 }
 
+/** Persists settings as formatted JSON, creating parent directories when needed. */
 export async function saveSettings(
   settings: AutoTalkSettings,
   path = getSettingsPath(),
@@ -68,6 +74,7 @@ export async function saveSettings(
 `, "utf8");
 }
 
+/** Wraps editor text in the AutoTalk thought-memo prompt sent to the agent. */
 export function formatThoughtMemo(text: string): string {
   return `[AutoTalk]
 This is an automatically sent user thought memo.
@@ -78,6 +85,7 @@ Unless explicitly requested, do not edit files, run commands, or send external m
 ${text}`;
 }
 
+/** Returns the one-shot empty-editor continuation prompt. */
 export function formatEmptyPrompt(): string {
   return `[AutoTalk]
 The editor is empty. From the conversation so far, ask one question to think about next.`;
