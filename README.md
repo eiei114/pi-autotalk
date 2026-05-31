@@ -57,11 +57,7 @@ Then run:
 
 | Path | Purpose |
 |---|---|
-| `extensions/` | Pi TypeScript extension entrypoints (`*.ts` and `index.ts`) |
-| `lib/` | Shared TypeScript helpers |
-| `skills/` | Agent Skills |
-| `prompts/` | Prompt templates |
-| `themes/` | Pi themes |
+| `extensions/` | Pi TypeScript extension entrypoint scaffold |
 | `docs/` | Release and setup docs |
 
 ## Development

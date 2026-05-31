@@ -23,10 +23,6 @@
   "homepage": "https://github.com/eiei114/pi-autotalk#readme",
   "files": [
     "extensions/",
-    "lib/",
-    "skills/",
-    "prompts/",
-    "themes/",
     "docs/",
     "README.md",
     "LICENSE",
@@ -41,15 +37,6 @@
   "pi": {
     "extensions": [
       "./extensions"
-    ],
-    "skills": [
-      "./skills"
-    ],
-    "prompts": [
-      "./prompts"
-    ],
-    "themes": [
-      "./themes"
     ]
   },
   "publishConfig": {
