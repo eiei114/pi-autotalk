@@ -1,38 +1,42 @@
-# PACKAGE_DISPLAY_NAME
+﻿# Pi AutoTalk
 
-[![CI](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/REPO/actions/workflows/ci.yml)
-[![Publish](https://github.com/OWNER/REPO/actions/workflows/publish.yml/badge.svg)](https://github.com/OWNER/REPO/actions/workflows/publish.yml)
-[![npm version](https://img.shields.io/npm/v/PACKAGE_NAME.svg)](https://www.npmjs.com/package/PACKAGE_NAME)
-[![npm downloads](https://img.shields.io/npm/dm/PACKAGE_NAME.svg)](https://www.npmjs.com/package/PACKAGE_NAME)
+[![CI](https://github.com/eiei114/pi-autotalk/actions/workflows/ci.yml/badge.svg)](https://github.com/eiei114/pi-autotalk/actions/workflows/ci.yml)
+[![Publish](https://github.com/eiei114/pi-autotalk/actions/workflows/publish.yml/badge.svg)](https://github.com/eiei114/pi-autotalk/actions/workflows/publish.yml)
+[![npm version](https://img.shields.io/npm/v/pi-autotalk.svg)](https://www.npmjs.com/package/pi-autotalk)
+[![npm downloads](https://img.shields.io/npm/dm/pi-autotalk.svg)](https://www.npmjs.com/package/pi-autotalk)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Pi package](https://img.shields.io/badge/pi-package-purple.svg)](https://pi.dev/packages)
 [![Trusted Publishing](https://img.shields.io/badge/npm-Trusted%20Publishing-blue.svg)](docs/release.md)
 
-> One-line pitch for this TypeScript-first Pi package.
+> Timed AutoTalk for Pi: periodically send your editor thoughts to the agent for brainstorming.
+
+> Status: scaffolded / not implemented yet. This repository was created from the Pi extension template; the AutoTalk feature is specified but still pending implementation.
 
 ## What this is
 
-Briefly explain what this TypeScript-first package adds to Pi and who should use it.
+Pi AutoTalk will add a local Pi extension that reads the interactive editor buffer on a timer, sends it as an AutoTalk thought memo, and clears the editor after safe delivery. It is meant for low-friction brainstorming: speak or type half-formed thoughts, let Pi respond, then keep thinking.
 
-## Features
+## Planned features
 
-- Feature 1
-- Feature 2
-- Feature 3
+- `/autotalk:on` and `/autotalk:off` to explicitly start and stop timed sending.
+- `/autotalk:mode` to choose busy-agent delivery: `followUp` or `steer`.
+- `/autotalk:settings` to configure interval seconds and delivery mode.
+- Safety pause when the editor starts with `/`, so slash commands are not auto-sent.
+- AutoTalk prefix that frames sent text as a thought memo and discourages tool use unless explicitly requested.
 
-## Install
+## Planned install
 
 ```bash
-pi install npm:PACKAGE_NAME
+pi install npm:pi-autotalk
 ```
 
 Or install from GitHub:
 
 ```bash
-pi install git:github.com/OWNER/REPO
+pi install git:github.com/eiei114/pi-autotalk
 ```
 
-## Quick start
+## Planned quick start
 
 Try this package locally:
 
@@ -43,7 +47,10 @@ pi -e .
 Then run:
 
 ```txt
-/your-command
+/autotalk:on
+/autotalk:settings
+/autotalk:mode
+/autotalk:off
 ```
 
 ## Package contents
@@ -90,13 +97,15 @@ More docs:
 
 Pi packages can execute code with your local permissions. Review extensions before installing third-party packages.
 
+AutoTalk is a deliberate auto-send feature. The planned MVP starts disabled on every Pi launch, pauses while slash commands are being typed, and does not persist the enabled state globally.
+
 For vulnerability reporting, see [`SECURITY.md`](SECURITY.md).
 
 ## Links
 
-- npm: https://www.npmjs.com/package/PACKAGE_NAME
-- GitHub: https://github.com/OWNER/REPO
-- Issues: https://github.com/OWNER/REPO/issues
+- npm: https://www.npmjs.com/package/pi-autotalk
+- GitHub: https://github.com/eiei114/pi-autotalk
+- Issues: https://github.com/eiei114/pi-autotalk/issues
 
 ## License
 
