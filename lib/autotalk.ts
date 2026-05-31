@@ -20,14 +20,17 @@ export const DEFAULT_SETTINGS: AutoTalkSettings = {
   deliveryMode: "followUp",
 };
 
+/** Path to the global AutoTalk settings JSON file under `~/.pi`. */
 export function getSettingsPath(): string {
   return join(homedir(), ".pi", "agent", "extensions", "autotalk", "settings.json");
 }
 
+/** Returns true when `value` is a supported AutoTalk delivery mode. */
 export function isDeliveryMode(value: unknown): value is DeliveryMode {
   return value === "followUp" || value === "steer";
 }
 
+/** Coerces unknown persisted settings into a valid `AutoTalkSettings` object. */
 export function normalizeSettings(value: unknown): AutoTalkSettings {
   if (!value || typeof value !== "object") return { ...DEFAULT_SETTINGS };
 
@@ -40,6 +43,7 @@ export function normalizeSettings(value: unknown): AutoTalkSettings {
   return { intervalSec, deliveryMode };
 }
 
+/** Parses an interval in seconds; returns `undefined` when out of range or invalid. */
 export function normalizeInterval(value: unknown): number | undefined {
   if (typeof value === "string" && value.trim() !== "") {
     return normalizeInterval(Number(value));
@@ -50,6 +54,7 @@ export function normalizeInterval(value: unknown): number | undefined {
   return value;
 }
 
+/** Loads settings from disk, falling back to defaults when the file is missing or invalid. */
 export async function loadSettings(path = getSettingsPath()): Promise<AutoTalkSettings> {
   try {
     const text = await readFile(path, "utf8");
@@ -59,6 +64,7 @@ export async function loadSettings(path = getSettingsPath()): Promise<AutoTalkSe
   }
 }
 
+/** Persists settings as formatted JSON, creating parent directories when needed. */
 export async function saveSettings(
   settings: AutoTalkSettings,
   path = getSettingsPath(),
@@ -68,17 +74,19 @@ export async function saveSettings(
 `, "utf8");
 }
 
+/** Wraps editor text in the AutoTalk thought-memo prompt sent to the agent. */
 export function formatThoughtMemo(text: string): string {
   return `[AutoTalk]
-これは自動送信されたユーザーの思考メモです。
-アイデアを広げ、論点を整理し、次の問いを1つ出してください。
-明示依頼でない限り、ファイル編集・コマンド実行・外部送信はしないでください。
+This is an automatically sent user thought memo.
+Expand the ideas, organize the key points, and ask one follow-up question.
+Unless explicitly requested, do not edit files, run commands, or send external messages.
 
---- 思考メモ ---
+--- Thought memo ---
 ${text}`;
 }
 
+/** Returns the one-shot empty-editor continuation prompt. */
 export function formatEmptyPrompt(): string {
   return `[AutoTalk]
-入力欄が空です。ここまでの流れから、次に考える問いを1つ出してください。`;
+The editor is empty. From the conversation so far, ask one question to think about next.`;
 }

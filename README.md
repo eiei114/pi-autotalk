@@ -70,7 +70,7 @@ If the editor is empty, AutoTalk sends a one-shot continuation prompt:
 
 ```text
 [AutoTalk]
-入力欄が空です。ここまでの流れから、次に考える問いを1つ出してください。
+The editor is empty. From the conversation so far, ask one question to think about next.
 ```
 
 That empty prompt is sent only once. It resets after a real non-empty thought memo is sent.
@@ -90,11 +90,11 @@ Non-empty editor text is sent like this:
 
 ```text
 [AutoTalk]
-これは自動送信されたユーザーの思考メモです。
-アイデアを広げ、論点を整理し、次の問いを1つ出してください。
-明示依頼でない限り、ファイル編集・コマンド実行・外部送信はしないでください。
+This is an automatically sent user thought memo.
+Expand the ideas, organize the key points, and ask one follow-up question.
+Unless explicitly requested, do not edit files, run commands, or send external messages.
 
---- 思考メモ ---
+--- Thought memo ---
 {editor text}
 ```
 
