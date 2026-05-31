@@ -27,11 +27,11 @@ test("normalizeSettings falls back for invalid values", () => {
 });
 
 test("formatThoughtMemo wraps text with AutoTalk safety prefix", () => {
-  const message = autotalk.formatThoughtMemo("考え中");
+  const message = autotalk.formatThoughtMemo("still thinking");
   assert.match(message, /^\[AutoTalk\]/);
-  assert.match(message, /思考メモ/);
-  assert.match(message, /明示依頼でない限り/);
-  assert.match(message, /考え中$/);
+  assert.match(message, /Thought memo/);
+  assert.match(message, /Unless explicitly requested/);
+  assert.match(message, /still thinking$/);
 });
 
 test("saveSettings writes readable global settings JSON", async () => {
