@@ -178,7 +178,7 @@ Useful commands:
 | `extensions/index.ts` | Pi extension entrypoint and command/timer wiring. |
 | `lib/autotalk.ts` | Settings validation, persistence, and message formatting helpers. |
 | `tests/` | Node test suite for package metadata, formatting, settings, and registration. |
-| `docs/` | Release and template maintenance docs. |
+| `docs/` | Release and publishing docs. |
 
 ## Development
 
