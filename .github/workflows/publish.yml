@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Git ref to publish (defaults to selected ref)"
+        required: false
+        type: string
 
 permissions:
   id-token: write
@@ -15,6 +21,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.inputs.ref || github.ref }}
       - uses: actions/setup-node@v6
         with:
           node-version: "22"

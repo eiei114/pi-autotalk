@@ -1,6 +1,7 @@
 ﻿# Pi AutoTalk
 
 [![CI](https://github.com/eiei114/pi-autotalk/actions/workflows/ci.yml/badge.svg)](https://github.com/eiei114/pi-autotalk/actions/workflows/ci.yml)
+[![Auto Release](https://github.com/eiei114/pi-autotalk/actions/workflows/auto-release.yml/badge.svg)](https://github.com/eiei114/pi-autotalk/actions/workflows/auto-release.yml)
 [![Publish](https://github.com/eiei114/pi-autotalk/actions/workflows/publish.yml/badge.svg)](https://github.com/eiei114/pi-autotalk/actions/workflows/publish.yml)
 [![npm version](https://img.shields.io/npm/v/pi-autotalk.svg)](https://www.npmjs.com/package/pi-autotalk)
 [![npm downloads](https://img.shields.io/npm/dm/pi-autotalk.svg)](https://www.npmjs.com/package/pi-autotalk)
@@ -213,14 +214,20 @@ For vulnerability reporting, see [`SECURITY.md`](SECURITY.md).
 
 ## Release
 
-This package is set up for npm Trusted Publishing, so no `NPM_TOKEN` is required.
+This package uses npm Trusted Publishing (OIDC). No `NPM_TOKEN` is required.
+
+On merge to `main` with a `package.json` version bump, `.github/workflows/auto-release.yml` creates the `v*` tag and GitHub release, then dispatches `.github/workflows/publish.yml` to publish to npm.
+
+Maintainer flow:
 
 ```bash
-npm version patch
-git push --follow-tags
+npm version patch   # or minor/major — updates package.json only
+git push origin main
 ```
 
-See [`docs/release.md`](docs/release.md) for setup details.
+You can also bump `version` in `package.json` in a PR; after merge, auto-release handles tagging and publish.
+
+See [`docs/release.md`](docs/release.md) for setup and verification details.
 
 ## Links
 
