@@ -42,8 +42,8 @@ jobs:
 
           PREVIOUS_VERSION=$(git show "${BEFORE}:package.json" | node -e "let input=''; process.stdin.on('data', c => input += c); process.stdin.on('end', () => console.log(JSON.parse(input).version || ''));")
 
-          if [ "$CURRENT_VERSION" = "$PREVIOUS_VERSION" ]; then
-            echo "package.json version did not change (${CURRENT_VERSION}); skipping."
+          if ! dpkg --compare-versions "$CURRENT_VERSION" gt "$PREVIOUS_VERSION"; then
+            echo "Version did not increase (${PREVIOUS_VERSION} -> ${CURRENT_VERSION}); skipping."
             echo "released=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi

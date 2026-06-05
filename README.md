@@ -221,7 +221,7 @@ On merge to `main` with a `package.json` version bump, `.github/workflows/auto-r
 Maintainer flow:
 
 ```bash
-npm version patch   # or minor/major — updates package.json only
+npm version patch   # or minor/major — updates package.json, package-lock.json (if present), creates a git commit and tag by default
 git push origin main
 ```
 
