@@ -37,7 +37,7 @@ On npmjs.com, configure Trusted Publishing for this package (`eiei114/pi-autotal
 - (Optional) Environment: leave unset unless you pin one in the workflow
 
 This must be done **before** the first automated publish. If 0.1.0 was published
-manually with a local login, the Trusted Publisher link may never have been
+manually with a local login, the Trusted Publisher link may have never been
 created — verify it during [recovery](#recovery-github-release-exists-but-npm-latest-is-stale).
 
 ## Publish
@@ -62,7 +62,7 @@ git push origin main --follow-tags
 
 A `v*` tag push triggers `publish.yml` directly. Use this for a one-off release
 when you do not want to rely on auto-release. Still run the verification
-checklist afterwards.
+checklist afterward.
 
 ## Post-release verification checklist
 
@@ -107,7 +107,7 @@ GitHub Release, the newest successful Publish run, and npm `latest` all agree.
 ## Recovery: GitHub release exists but npm latest is stale
 
 Use this when a tag + GitHub Release exist for `<V>` but `npm view
-pi-autotalk version` returns an older version. This is exactly the 2026-06 drift.
+pi-autotalk version` returns an older version. This matches the 2026-06 drift.
 
 ### 1. Confirm and scope the drift
 
@@ -133,7 +133,7 @@ gh run view <run-id> --log           # read the "Run npm publish" step
 
 For the 2026-06 drift the failing run was `27050120988` and the error was:
 
-```
+```bash
 npm error code E404
 npm error 404 Not Found - PUT https://registry.npmjs.org/pi-autotalk - Not found
 npm error 404  'pi-autotalk@0.1.2' is not in this registry.
@@ -150,7 +150,7 @@ The most likely root cause (this repo's model is Trusted Publishing, no token):
   npmjs.com**, or is scoped to the wrong workflow file / trigger. On npmjs.com
   open the package → Settings → Trusted Publishers and confirm: repository
   `eiei114/pi-autotalk`, workflow filename `publish.yml`. Because 0.1.0 was
-  published with a manual login, this link may never have been created.
+  published with a manual login, this link may have never been created.
 
 ### 3. Fix the publish path before republishing
 
@@ -265,7 +265,7 @@ The break is the **last hop**: `npm publish` inside `publish.yml`.
 - Secondary cause to rule out during recovery: the Trusted Publisher is not
   registered on npmjs.com, or is scoped to the wrong workflow file / trigger
   (e.g. registered for `push: tags` only, not `workflow_dispatch`). Because
-  `0.1.0` was published manually, the link may never have been created.
+  `0.1.0` was published manually, the link may have never been created.
 
 The fix, verification, and republish steps are in
 [Recovery](#recovery-github-release-exists-but-npm-latest-is-stale). No version
@@ -281,7 +281,7 @@ separate, explicitly approved action.
 - `npm publish` (with `--provenance` for Trusted Publishing) from the configured
   workflow file (`publish.yml`)
 
-## Local pre-release dry run
+## Local prerelease dry run
 
 ```bash
 npm run ci            # typecheck + tests + pack:check
