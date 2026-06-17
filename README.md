@@ -227,7 +227,9 @@ git push origin main
 
 You can also bump `version` in `package.json` in a PR; after merge, auto-release handles tagging and publish.
 
-See [`docs/release.md`](docs/release.md) for setup and verification details.
+After merge, run the [post-release verification checklist](docs/release.md#post-release-verification-checklist) in `docs/release.md` to confirm the GitHub tag/release, Publish Package workflow, and npm `latest` all match the new version. A green auto-release run alone is not proof npm received the package.
+
+See [`docs/release.md`](docs/release.md) for setup, recovery, and verification details.
 
 ## Links
 

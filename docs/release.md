@@ -6,10 +6,12 @@ Do **not** add `NPM_TOKEN` or any long-lived npm token to GitHub Secrets. The
 publish step authenticates via an OIDC token minted by GitHub Actions and linked
 to this package on npmjs.com.
 
-> **Known drift (as of 2026-06-14):** GitHub is at `v0.1.2` but npm `latest` is
-> still `0.1.0`. Versions `0.1.1` and `0.1.2` were never published to npm. The
-> investigation, root cause, verification checklist, and recovery path are in the
-> last three sections of this document. Read them before doing another release.
+> **Release pipeline recovery (`0.1.3`):** Prior drift (GitHub at `v0.1.2`, npm
+> `latest` at `0.1.0`) was caused by `publish.yml` running `npm publish` without
+> `--provenance`, so OIDC Trusted Publishing never authenticated. `0.1.3` fixes
+> the workflow and is the supported path to bring npm `latest` back in sync.
+> After merge, run the [verification checklist](#post-release-verification-checklist)
+> below. Historical drift details remain in [Known release drift](#known-release-drift--2026-06-investigation).
 
 ## Model
 
@@ -156,8 +158,9 @@ The most likely root cause (this repo's model is Trusted Publishing, no token):
 
 Pick the fix that matches this repo's model (Trusted Publishing):
 
-- Ensure `publish.yml` publishes with provenance, e.g. `npm publish --provenance`,
-  and that the job still has `permissions: id-token: write`.
+- Ensure `publish.yml` publishes with provenance (`npm publish --provenance`)
+  and that the job still has `permissions: id-token: write`. This is fixed on
+  `main` starting with `0.1.3`.
 - Confirm the Trusted Publisher registration on npmjs.com (step 2).
 
 (If you ever move away from Trusted Publishing, the alternative is to set an npm
