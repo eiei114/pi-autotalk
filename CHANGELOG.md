@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
 
+## [0.1.3] - 2026-06-18
+
+### Fixed
+
+- Release pipeline recovery: `publish.yml` now runs `npm publish --provenance` so npm Trusted Publishing (GitHub Actions OIDC) authenticates correctly. Without provenance, auto-release could create tags and GitHub Releases while npm publish failed with `E404`.
+
+### Changed
+
+- Maintainer release docs (`docs/release.md`, README) now point maintainers at the post-release verification checklist for GitHub release state and npm `latest` after every version bump.
+
 ## [0.1.2] - 2026-06-06
 
 ### Fixed
