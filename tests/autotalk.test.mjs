@@ -34,6 +34,21 @@ test("formatThoughtMemo wraps text with AutoTalk safety prefix", () => {
   assert.match(message, /still thinking$/);
 });
 
+test("isDeliveryMode validates only followUp and steer", () => {
+  assert.equal(autotalk.isDeliveryMode("followUp"), true);
+  assert.equal(autotalk.isDeliveryMode("steer"), true);
+  assert.equal(autotalk.isDeliveryMode("other"), false);
+  assert.equal(autotalk.isDeliveryMode(undefined), false);
+  assert.equal(autotalk.isDeliveryMode(""), false);
+});
+
+test("formatEmptyPrompt returns the one-shot continuation message", () => {
+  const message = autotalk.formatEmptyPrompt();
+  assert.match(message, /^\[AutoTalk\]/);
+  assert.match(message, /editor is empty/);
+  assert.match(message, /one question/);
+});
+
 test("saveSettings writes readable global settings JSON", async () => {
   const dir = await mkdtemp(join(tmpdir(), "pi-autotalk-"));
   const settingsPath = join(dir, "settings.json");
