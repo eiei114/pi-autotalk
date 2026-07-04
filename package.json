@@ -1,6 +1,6 @@
 {
   "name": "pi-autotalk",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "A Pi extension for timed AutoTalk brainstorming from the editor input.",
   "type": "module",
   "license": "MIT",

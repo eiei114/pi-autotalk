@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
 
+## [0.1.4] - 2026-07-04
+
+### Fixed
+
+- Publish pipeline: removed `registry-url` from `setup-node` in `.github/workflows/publish.yml`
+  so `npm publish --provenance` uses the OIDC token for both provenance signing and HTTP
+  authentication. Previously `NODE_AUTH_TOKEN` (set to GITHUB_TOKEN by setup-node) took
+  precedence, causing `E404 PUT` even when npm Trusted Publisher was correctly configured.
+
 ## [0.1.3] - 2026-06-18
 
 ### Fixed
