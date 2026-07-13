@@ -10,6 +10,10 @@ on:
         description: "Git ref to publish (defaults to selected ref)"
         required: false
         type: string
+      dist-tag:
+        description: "npm dist-tag (defaults to latest; use e.g. v0.1.3 for backfill)"
+        required: false
+        type: string
 
 permissions:
   id-token: write
@@ -34,4 +38,12 @@ jobs:
       - run: npm test
       - run: npm run pack:check
       - run: npm install -g npm@11
-      - run: npm publish --provenance
+      - name: Publish to npm
+        env:
+          DIST_TAG: ${{ github.event.inputs.dist-tag }}
+        run: |
+          if [ -n "$DIST_TAG" ]; then
+            npm publish --provenance --tag="$DIST_TAG"
+          else
+            npm publish --provenance
+          fi
