@@ -27,9 +27,11 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: "22"
-          cache: npm
+          registry-url: "https://registry.npmjs.org"
+          package-manager-cache: false
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
       - run: npm run pack:check
+      - run: npm install -g npm@11
       - run: npm publish --provenance
