@@ -195,6 +195,12 @@ npm run ci
 2. `node --test tests/*.test.mjs`
 3. `npm pack --dry-run`
 
+On pull requests, CI also runs `npm run version:check` to validate optional version bumps (semver must increase; `CHANGELOG.md` is required when the version changes). Before opening a PR that bumps `package.json#version`, run:
+
+```bash
+BASE_REF=origin/main npm run version:check
+```
+
 ## Security and privacy
 
 AutoTalk intentionally sends editor contents to the active Pi agent. Treat it like an auto-submit feature.
