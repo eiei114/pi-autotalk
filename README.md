@@ -247,3 +247,4 @@ See [`docs/release.md`](docs/release.md) for setup, recovery, and verification d
 ## License
 
 MIT
+[![Join dotfield.xyz on Discord](https://img.shields.io/badge/Join%20dotfield.xyz%20on%20Discord-5865F2?logo=discord&logoColor=white)](https://discord.gg/4945dXZVW5)
