@@ -135,21 +135,18 @@ pi install git:github.com/eiei114/pi-autotalk
 
 ### Local development install
 
-Clone or keep the repo under:
-
-```text
-C:/Users/Keisu/Projects/OSS/pi-autotalk
-```
-
-Then add it to a project `.pi/settings.json`:
+Clone this repository next to your Pi project (or anywhere on disk), then add a
+relative path to that checkout in your project `.pi/settings.json`:
 
 ```json
 {
   "packages": [
-    "..\\..\\..\\OSS\\pi-autotalk"
+    "../pi-autotalk"
   ]
 }
 ```
+
+Adjust the relative path to match where you cloned the repo.
 
 After editing settings, reload Pi:
 
@@ -199,6 +196,12 @@ On pull requests, CI also runs `npm run version:check` to validate optional vers
 
 ```bash
 BASE_REF=origin/main npm run version:check
+```
+
+On PowerShell:
+
+```powershell
+$env:BASE_REF = "origin/main"; npm run version:check
 ```
 
 ## Security and privacy

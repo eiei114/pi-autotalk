@@ -28,4 +28,16 @@ test("README documents CI version:check PR guard when workflow runs it", async (
 
   assert.match(readme, /npm run version:check/);
   assert.match(readme, /BASE_REF=origin\/main/);
+  assert.match(readme, /\$env:BASE_REF = "origin\/main"/);
+});
+
+test("README avoids maintainer-specific local install paths", async () => {
+  const readme = await readFile(new URL("README.md", repoRoot), "utf8");
+
+  assert.doesNotMatch(
+    readme,
+    /C:\/Users\/[^/]+\/Projects\/OSS\/pi-autotalk/,
+    "local development docs should use a portable relative path example",
+  );
+  assert.match(readme, /\.\.\/pi-autotalk/);
 });
