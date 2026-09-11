@@ -5,9 +5,11 @@ import type {
 } from "@earendil-works/pi-coding-agent";
 import {
   DEFAULT_SETTINGS,
+  DELIVERY_MODE_OPTIONS,
   formatEmptyPrompt,
   formatThoughtMemo,
   IDLE_BEFORE_SEND_MS,
+  isDeliveryMode,
   loadSettings,
   normalizeInterval,
   saveSettings,
@@ -132,6 +134,13 @@ export default function (pi: ExtensionAPI) {
     return false;
   }
 
+  async function promptDeliveryMode(
+    ctx: ExtensionCommandContext,
+  ): Promise<DeliveryMode | undefined> {
+    const choice = await ctx.ui.select("AutoTalk delivery mode:", [...DELIVERY_MODE_OPTIONS]);
+    return isDeliveryMode(choice) ? choice : undefined;
+  }
+
   function enable(ctx: ExtensionCommandContext): void {
     if (!requireUi(ctx)) return;
 
@@ -150,10 +159,10 @@ export default function (pi: ExtensionAPI) {
   async function setMode(ctx: ExtensionCommandContext): Promise<void> {
     if (!requireUi(ctx)) return;
 
-    const choice = await ctx.ui.select("AutoTalk delivery mode:", ["followUp", "steer"]);
-    if (choice !== "followUp" && choice !== "steer") return;
+    const deliveryMode = await promptDeliveryMode(ctx);
+    if (!deliveryMode) return;
 
-    settings = { ...settings, deliveryMode: choice as DeliveryMode };
+    settings = { ...settings, deliveryMode };
     await saveSettings(settings);
     updateStatus(ctx);
   }
@@ -173,10 +182,10 @@ export default function (pi: ExtensionAPI) {
       return;
     }
 
-    const mode = await ctx.ui.select("AutoTalk delivery mode:", ["followUp", "steer"]);
-    if (mode !== "followUp" && mode !== "steer") return;
+    const deliveryMode = await promptDeliveryMode(ctx);
+    if (!deliveryMode) return;
 
-    settings = { intervalSec, deliveryMode: mode as DeliveryMode };
+    settings = { intervalSec, deliveryMode };
     await saveSettings(settings);
 
     if (enabled) startTimers(ctx);

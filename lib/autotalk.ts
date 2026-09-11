@@ -4,6 +4,9 @@ import { dirname, join } from "node:path";
 
 export type DeliveryMode = "followUp" | "steer";
 
+export const DELIVERY_MODE_OPTIONS: readonly DeliveryMode[] = ["followUp", "steer"];
+export const AUTOTALK_PREFIX = "[AutoTalk]";
+
 export interface AutoTalkSettings {
   intervalSec: number;
   deliveryMode: DeliveryMode;
@@ -74,19 +77,25 @@ export async function saveSettings(
 `, "utf8");
 }
 
+/** Prefixes AutoTalk prompt bodies with the shared `[AutoTalk]` tag line. */
+export function withAutoTalkPrefix(body: string): string {
+  return `${AUTOTALK_PREFIX}
+${body}`;
+}
+
 /** Wraps editor text in the AutoTalk thought-memo prompt sent to the agent. */
 export function formatThoughtMemo(text: string): string {
-  return `[AutoTalk]
-This is an automatically sent user thought memo.
+  return withAutoTalkPrefix(`This is an automatically sent user thought memo.
 Expand the ideas, organize the key points, and ask one follow-up question.
 Unless explicitly requested, do not edit files, run commands, or send external messages.
 
 --- Thought memo ---
-${text}`;
+${text}`);
 }
 
 /** Returns the one-shot empty-editor continuation prompt. */
 export function formatEmptyPrompt(): string {
-  return `[AutoTalk]
-The editor is empty. From the conversation so far, ask one question to think about next.`;
+  return withAutoTalkPrefix(
+    "The editor is empty. From the conversation so far, ask one question to think about next.",
+  );
 }
