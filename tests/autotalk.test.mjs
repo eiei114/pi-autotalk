@@ -49,6 +49,32 @@ test("formatEmptyPrompt returns the one-shot continuation message", () => {
   assert.match(message, /one question/);
 });
 
+test("withAutoTalkPrefix shares the AutoTalk tag across prompt formatters", () => {
+  assert.equal(autotalk.withAutoTalkPrefix("body"), `${autotalk.AUTOTALK_PREFIX}\nbody`);
+  assert.equal(
+    autotalk.formatThoughtMemo("memo"),
+    autotalk.withAutoTalkPrefix(`This is an automatically sent user thought memo.
+Expand the ideas, organize the key points, and ask one follow-up question.
+Unless explicitly requested, do not edit files, run commands, or send external messages.
+
+--- Thought memo ---
+memo`),
+  );
+  assert.equal(
+    autotalk.formatEmptyPrompt(),
+    autotalk.withAutoTalkPrefix(
+      "The editor is empty. From the conversation so far, ask one question to think about next.",
+    ),
+  );
+});
+
+test("DELIVERY_MODE_OPTIONS lists supported delivery modes", () => {
+  assert.deepEqual(autotalk.DELIVERY_MODE_OPTIONS, ["followUp", "steer"]);
+  for (const mode of autotalk.DELIVERY_MODE_OPTIONS) {
+    assert.equal(autotalk.isDeliveryMode(mode), true);
+  }
+});
+
 test("saveSettings writes readable global settings JSON", async () => {
   const dir = await mkdtemp(join(tmpdir(), "pi-autotalk-"));
   const settingsPath = join(dir, "settings.json");
