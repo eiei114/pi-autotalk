@@ -1,5 +1,5 @@
 ﻿import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -72,6 +72,18 @@ test("DELIVERY_MODE_OPTIONS lists supported delivery modes", () => {
   assert.deepEqual(autotalk.DELIVERY_MODE_OPTIONS, ["followUp", "steer"]);
   for (const mode of autotalk.DELIVERY_MODE_OPTIONS) {
     assert.equal(autotalk.isDeliveryMode(mode), true);
+  }
+});
+
+test("loadSettings falls back to defaults when persisted JSON is malformed", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "pi-autotalk-"));
+  const settingsPath = join(dir, "settings.json");
+
+  try {
+    await writeFile(settingsPath, '{"intervalSec":', "utf8");
+    assert.deepEqual(await autotalk.loadSettings(settingsPath), autotalk.DEFAULT_SETTINGS);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
   }
 });
 
