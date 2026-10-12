@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "verification_contract": "pi-sdk-behavior-v2",
+  "sdk_versions": {
+    "@earendil-works/pi-agent-core": "1.1.0",
+    "@earendil-works/pi-ai": "1.1.0",
+    "@earendil-works/pi-coding-agent": "1.1.0",
+    "@earendil-works/pi-tui": "1.1.0"
+  },
+  "platform": "win32",
+  "model_inference": "none; actual Pi RPC host handles AutoTalk commands using isolated settings",
+  "unhandled_errors": 0,
+  "extension_load_errors": 0,
+  "cases": [
+    {
+      "name": "extension_load",
+      "command": "npm run smoke:pi",
+      "exit_code": 0,
+      "passed": true,
+      "evidence": "{\"type\":\"extension_ui_request\",\"id\":\"1b4239f9-811d-4ee4-b143-4bf7b8f14285\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\"}\n{\"type\":\"extension_ui_request\",\"id\":\"42f79df2-7da1-4a87-8b73-66b9e9695aa9\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\",\"statusText\":\"\\u001b[38;5;5mAutoTalk\\u001b[39m\\u001b[39m\\u001b[2m on 10s followUp\\u001b[22;39m\"}\n{\"id\":\"load-on\",\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}}\n{\"type\":\"extension_ui_request\",\"id\":\"6a03169a-7bd5-4fc2-9d08-fd97b0bb8e04\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\"}\n{\"id\":\"load-off\",\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}}\n",
+      "assertions": [
+        {
+          "id": "extension_registered",
+          "expected": "Actual Pi handles /autotalk:on and emits AutoTalk's enabled status",
+          "observed": "{\"response\":{\"id\":\"load-on\",\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}},\"status\":{\"type\":\"extension_ui_request\",\"id\":\"42f79df2-7da1-4a87-8b73-66b9e9695aa9\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\",\"statusText\":\"\\u001b[38;5;5mAutoTalk\\u001b[39m\\u001b[39m\\u001b[2m on 10s followUp\\u001b[22;39m\"}}",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "name": "happy_path",
+      "command": "npm run smoke:pi",
+      "exit_code": 0,
+      "passed": true,
+      "evidence": "{\"type\":\"extension_ui_request\",\"id\":\"69732a8c-5682-4129-a00d-a09d2326ef25\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\"}\n{\"type\":\"extension_ui_request\",\"id\":\"b612fac5-9282-4e3e-af58-b448e009b716\",\"method\":\"input\",\"title\":\"AutoTalk interval seconds (5-120):\",\"placeholder\":\"10\"}\n{\"type\":\"extension_ui_request\",\"id\":\"c00400d2-21fb-4a0d-82fa-858fe7f4a7d5\",\"method\":\"select\",\"title\":\"AutoTalk delivery mode:\",\"options\":[\"followUp\",\"steer\"]}\n{\"type\":\"extension_ui_request\",\"id\":\"c66f7441-f759-4b8f-92d9-cbbd2ff662f4\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\"}\n{\"id\":\"feature-settings\",\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}}\n{\"type\":\"extension_ui_request\",\"id\":\"fe26baa5-7768-4ce3-a43e-b5cc8c4fa6c0\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\",\"statusText\":\"\\u001b[38;5;5mAutoTalk\\u001b[39m\\u001b[39m\\u001b[2m on 15s steer\\u001b[22;39m\"}\n{\"id\":\"feature-on\",\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}}\n{\"type\":\"extension_ui_request\",\"id\":\"38f41e71-daae-4f80-bf52-f7889d0d4297\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\"}\n{\"id\":\"feature-off\",\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}}\n",
+      "assertions": [
+        {
+          "id": "feature_response",
+          "expected": "Settings entered through Pi RPC persist and the enabled command reports the configured interval and mode",
+          "observed": "{\"response\":{\"id\":\"feature-on\",\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}},\"status\":{\"type\":\"extension_ui_request\",\"id\":\"fe26baa5-7768-4ce3-a43e-b5cc8c4fa6c0\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\",\"statusText\":\"\\u001b[38;5;5mAutoTalk\\u001b[39m\\u001b[39m\\u001b[2m on 15s steer\\u001b[22;39m\"},\"persistedSettings\":{\"intervalSec\":15,\"deliveryMode\":\"steer\"}}",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "name": "error_path",
+      "command": "npm run smoke:pi",
+      "exit_code": 0,
+      "passed": true,
+      "evidence": "{\"type\":\"extension_ui_request\",\"id\":\"7fe3afa2-24b7-41e5-a0c5-d0035a75c518\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\"}\n{\"type\":\"response\",\"command\":\"parse\",\"success\":false,\"error\":\"Failed to parse command: Unexpected token 'o', \\\"not-json\\\" is not valid JSON\"}\n",
+      "assertions": [
+        {
+          "id": "handled_error",
+          "expected": "Malformed RPC input is rejected with success=false and a parse error, without an unhandled host error",
+          "observed": "{\"type\":\"response\",\"command\":\"parse\",\"success\":false,\"error\":\"Failed to parse command: Unexpected token 'o', \\\"not-json\\\" is not valid JSON\"}",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "name": "reload_cleanup",
+      "command": "npm run smoke:pi",
+      "exit_code": 0,
+      "passed": true,
+      "evidence": "{\"type\":\"extension_ui_request\",\"id\":\"3688adc5-d13b-412b-a46f-44edf1d6253a\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\"}\n{\"type\":\"extension_ui_request\",\"id\":\"c22e668c-79f5-41ac-8c95-5ab2c475dd94\",\"method\":\"input\",\"title\":\"AutoTalk interval seconds (5-120):\",\"placeholder\":\"15\"}\n{\"type\":\"extension_ui_request\",\"id\":\"30baa3c0-4211-49ec-9b1c-a1638292be4d\",\"method\":\"select\",\"title\":\"AutoTalk delivery mode:\",\"options\":[\"followUp\",\"steer\"]}\n{\"type\":\"extension_ui_request\",\"id\":\"44a277ff-ffa8-422f-b338-e069135a5ba8\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\"}\n{\"id\":\"reload-settings\",\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}}\n\n--- second Pi host ---\n{\"type\":\"extension_ui_request\",\"id\":\"998869b6-9399-41e9-ae19-cf2897f4df34\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\"}\n{\"type\":\"extension_ui_request\",\"id\":\"8d7e4ce0-f1be-4ce8-a0e8-45b21b77f24b\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\",\"statusText\":\"\\u001b[38;5;5mAutoTalk\\u001b[39m\\u001b[39m\\u001b[2m on 15s steer\\u001b[22;39m\"}\n{\"id\":\"reload-on\",\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}}\n{\"type\":\"extension_ui_request\",\"id\":\"a6740032-95e9-4010-a2ad-2289a6447499\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\"}\n{\"id\":\"reload-off\",\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}}\n",
+      "assertions": [
+        {
+          "id": "reloaded_extension_registered",
+          "expected": "A second actual Pi host loads the persisted AutoTalk settings and handles /autotalk:on",
+          "observed": "{\"id\":\"reload-on\",\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}}",
+          "passed": true
+        },
+        {
+          "id": "reloaded_feature_response",
+          "expected": "The reloaded host emits the feature status using settings persisted by the first host",
+          "observed": "{\"status\":{\"type\":\"extension_ui_request\",\"id\":\"8d7e4ce0-f1be-4ce8-a0e8-45b21b77f24b\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\",\"statusText\":\"\\u001b[38;5;5mAutoTalk\\u001b[39m\\u001b[39m\\u001b[2m on 15s steer\\u001b[22;39m\"},\"persistedSettings\":{\"intervalSec\":15,\"deliveryMode\":\"steer\"}}",
+          "passed": true
+        },
+        {
+          "id": "clean_shutdown",
+          "expected": "Both actual Pi hosts close with exit code zero and no unhandled or shutdown errors",
+          "observed": "{\"exit_codes\":[0,0],\"errors\":false}",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "name": "host_shell",
+      "command": "npm run smoke:pi",
+      "exit_code": 0,
+      "passed": true,
+      "evidence": "1.1.0\n",
+      "assertions": [
+        {
+          "id": "native_shell_boundary",
+          "expected": "Native host shell launches the locally pinned Pi CLI and returns its exact SDK version",
+          "observed": "{\"exit_code\":0,\"output\":\"1.1.0\",\"expectedVersion\":\"1.1.0\"}",
+          "passed": true
+        }
+      ]
+    }
+  ]
+}
