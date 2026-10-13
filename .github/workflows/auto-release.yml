@@ -36,6 +36,8 @@ jobs:
             exit 0
           fi
 
+          node scripts/check-release-version.mjs "$CURRENT_VERSION"
+
           echo "Explicit manual release requested for ${CURRENT_VERSION}."
           echo "released=true" >> "$GITHUB_OUTPUT"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
