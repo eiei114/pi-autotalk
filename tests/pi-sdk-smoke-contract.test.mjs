@@ -26,7 +26,7 @@ test("all required Pi behavior assertions pass with observed AutoTalk responses"
     ["happy_path", { responses: [response("feature-on"), status(15, "steer")], fullOutput: "", exit_code: 0, persistedSettings }],
     ["error_path", { responses: [{ type: "response", command: "parse", success: false, error: "Invalid JSON" }], fullOutput: "", exit_code: 0 }],
     ["reload_cleanup", { responses: [response("reload-on"), status(15, "steer")], fullOutput: "", exit_code: 0, exit_codes: [0, 0], persistedSettings }],
-    ["host_shell", { responses: [], fullOutput: "1.1.0\n", exit_code: 0, expectedVersion: "1.1.0" }],
+    ["host_shell", { responses: [], fullOutput: "1.2.0\n", exit_code: 0, expectedVersion: "1.2.0" }],
   ];
   const requiredIds = {
     extension_load: ["extension_registered"],
