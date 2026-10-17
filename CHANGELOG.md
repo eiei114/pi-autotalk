@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.12 - 2026-10-18
+
+### Changed
+
+- Reuse the editor snapshot during an AutoTalk send tick to avoid a duplicate UI read.
+
 ## 0.1.11 - 2026-10-16
 
 ### Changed

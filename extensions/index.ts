@@ -53,14 +53,16 @@ export default function (pi: ExtensionAPI) {
     editorWatcher = undefined;
   }
 
-  function observeEditor(ctx = latestContext): void {
-    if (!ctx?.hasUI) return;
+  function observeEditor(ctx = latestContext): string | undefined {
+    if (!ctx?.hasUI) return undefined;
 
     const current = ctx.ui.getEditorText();
     if (current !== lastObservedEditorText) {
       lastObservedEditorText = current;
       lastInputChangeAt = Date.now();
     }
+
+    return current;
   }
 
   function sendUserMessage(ctx: ExtensionContext, text: string): void {
@@ -88,11 +90,10 @@ export default function (pi: ExtensionAPI) {
     const ctx = latestContext;
     if (!enabled || sending || !ctx?.hasUI) return;
 
-    observeEditor(ctx);
+    const editorText = observeEditor(ctx);
+    if (editorText === undefined) return;
 
     if (Date.now() - lastInputChangeAt < IDLE_BEFORE_SEND_MS) return;
-
-    const editorText = ctx.ui.getEditorText();
 
     if (editorText.startsWith("/")) return;
 
