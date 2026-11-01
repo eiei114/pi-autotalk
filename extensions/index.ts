@@ -142,6 +142,7 @@ export default function (pi: ExtensionAPI) {
     return isDeliveryMode(choice) ? choice : undefined;
   }
 
+  /** Saves settings, optionally restarts active timers, and refreshes the footer. */
   async function applySettings(
     nextSettings: AutoTalkSettings,
     ctx: ExtensionCommandContext,
