@@ -142,6 +142,17 @@ export default function (pi: ExtensionAPI) {
     return isDeliveryMode(choice) ? choice : undefined;
   }
 
+  async function applySettings(
+    nextSettings: AutoTalkSettings,
+    ctx: ExtensionCommandContext,
+    restartTimers = false,
+  ): Promise<void> {
+    settings = nextSettings;
+    await saveSettings(settings);
+    if (restartTimers && enabled) startTimers(ctx);
+    updateStatus(ctx);
+  }
+
   function enable(ctx: ExtensionCommandContext): void {
     if (!requireUi(ctx)) return;
 
@@ -163,9 +174,7 @@ export default function (pi: ExtensionAPI) {
     const deliveryMode = await promptDeliveryMode(ctx);
     if (!deliveryMode) return;
 
-    settings = { ...settings, deliveryMode };
-    await saveSettings(settings);
-    updateStatus(ctx);
+    await applySettings({ ...settings, deliveryMode }, ctx);
   }
 
   async function openSettings(ctx: ExtensionCommandContext): Promise<void> {
@@ -186,11 +195,7 @@ export default function (pi: ExtensionAPI) {
     const deliveryMode = await promptDeliveryMode(ctx);
     if (!deliveryMode) return;
 
-    settings = { intervalSec, deliveryMode };
-    await saveSettings(settings);
-
-    if (enabled) startTimers(ctx);
-    updateStatus(ctx);
+    await applySettings({ intervalSec, deliveryMode }, ctx, true);
   }
 
   pi.on("session_start", async (_event, ctx) => {

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.13 - 2026-11-02
+
+### Changed
+
+- Centralize settings persistence and status refresh for AutoTalk settings commands.
+
 ## 0.1.12 - 2026-10-18
 
 ### Changed
