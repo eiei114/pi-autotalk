@@ -10,6 +10,18 @@ export const EXTENSION_LOAD_ERROR_PATTERN = /Failed to load extension|Error load
 /** AutoTalk's own validation warning for an out-of-range interval (extensions/index.ts openSettings). */
 export const FEATURE_WARNING_PATTERN = /Interval must be an integer from 5 to 120 seconds/;
 export const INVALID_INTERVAL_SEC = 999;
+/** Must match AutoTalk's accepted range and delivery modes (lib/autotalk.ts). */
+export const VALID_INTERVAL_MIN = 5;
+export const VALID_INTERVAL_MAX = 120;
+export const VALID_DELIVERY_MODES = ["followUp", "steer"];
+
+/** True only for a seed AutoTalk itself would accept; a malformed seed proves nothing. */
+export function isValidSettingsSeed(seed) {
+  return !!seed && typeof seed === "object"
+    && typeof seed.intervalSec === "number" && Number.isInteger(seed.intervalSec)
+    && seed.intervalSec >= VALID_INTERVAL_MIN && seed.intervalSec <= VALID_INTERVAL_MAX
+    && VALID_DELIVERY_MODES.includes(seed.deliveryMode);
+}
 
 export function parseJsonLines(output) {
   return output.split(/\r?\n/).flatMap((line) => {
@@ -66,25 +78,30 @@ export function behaviorAssertions(name, evidence) {
     // The before-state must be the known-valid seed: a missing or stale starting file would let the
     // case pass without proving the extension actually rejected and preserved earlier settings.
     const expectedBefore = evidence.expectedSettingsBeforeError ?? null;
-    const seedHonored = persistedBefore !== null
-      && (expectedBefore === null || JSON.stringify(expectedBefore) === JSON.stringify(persistedBefore));
+    const seedValid = isValidSettingsSeed(expectedBefore);
+    const seedHonored = seedValid && persistedBefore !== null
+      && JSON.stringify(expectedBefore) === JSON.stringify(persistedBefore);
     const persistedUnchanged = seedHonored && persistedAfter !== null
       && JSON.stringify(persistedAfter) === JSON.stringify(persistedBefore)
       && persistedAfter.intervalSec !== INVALID_INTERVAL_SEC;
-    // Supplemental host check: the Pi RPC parser still rejects malformed frames.
+    // Supplemental host check: the Pi RPC parser still rejects malformed frames. Its own process
+    // outcome is part of the assertion, so a nonzero exit or a hang after the rejection fails.
     const parse = (evidence.parserResponses ?? [])
       .find((row) => row?.type === "response" && row.command === "parse");
+    const parserHostExit = evidence.parserHostExit ?? null;
     return [
       assertion("handled_error",
         "An invalid AutoTalk interval is rejected by the extension with a warning and is not persisted, without an unhandled host error",
         { response: response ?? null, warning: warning ?? null,
-          expectedBefore, persistedBefore, persistedAfter, unhandledError: UNHANDLED_ERROR_PATTERN.test(fullOutput) },
+          expectedBefore, seedValid, persistedBefore, persistedAfter,
+          unhandledError: UNHANDLED_ERROR_PATTERN.test(fullOutput) },
         response?.success === true && response.data?.disposition === "handled"
           && !!warning && persistedUnchanged && !UNHANDLED_ERROR_PATTERN.test(fullOutput)),
       assertion("host_parse_error_supplemental",
-        "Supplemental: malformed RPC frames are still rejected by the Pi host parser with success=false",
-        parse ?? null,
-        parse?.success === false && typeof parse.error === "string" && parse.error.length > 0),
+        "Supplemental: malformed RPC frames are still rejected by the Pi host parser with success=false, and the parser host exits cleanly",
+        { parse: parse ?? null, parserHostExit: parserHostExit ?? null },
+        parse?.success === false && typeof parse.error === "string" && parse.error.length > 0
+          && parserHostExit?.exitObserved === true && parserHostExit?.code === 0),
     ];
   }
   if (name === "reload_cleanup") {

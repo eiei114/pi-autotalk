@@ -230,11 +230,20 @@ try {
   })();
   // Supplemental host check: the Pi RPC parser still rejects malformed frames.
   const parserHost = await runPiRpc({ malformed: true });
-  const errorPath = makeRpcCase("error_path", errorHost, null, {
+  // The parser host is a session of this case too, so a nonzero exit or a hang after the rejection
+  // is recorded instead of being invisible behind a passing parser record.
+  const parserHostExit = {
+    code: parserHost.code ?? null,
+    exitObserved: parserHost.exitObserved === true,
+    timedOut: parserHost.timedOut === true,
+    spawnError: parserHost.spawnError ?? null,
+  };
+  const errorPath = makeRpcCase("error_path", errorHost, parserHost, {
     expectedSettingsBeforeError: ERROR_PATH_SETTINGS,
     persistedSettingsBeforeError,
     persistedSettingsAfterError,
     parserResponses: parseJsonLines(parserHost.stdout),
+    parserHostExit,
   });
 
   const firstReloadHost = await runPiRpc({ promptIds: ["reload-settings"] });

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { behaviorAssertions, parseJsonLines } from "../scripts/pi-sdk-smoke-contract.mjs";
+import { behaviorAssertions, isValidSettingsSeed, parseJsonLines } from "../scripts/pi-sdk-smoke-contract.mjs";
 
 function response(id, disposition = "handled") {
   return { id, type: "response", command: "prompt", success: true, data: { disposition } };
@@ -34,6 +34,7 @@ function invalidIntervalEvidence(overrides = {}) {
     persistedSettingsBeforeError: persistedSteer15,
     persistedSettingsAfterError: persistedSteer15,
     parserResponses: [parseRejection()],
+    parserHostExit: { code: 0, exitObserved: true, timedOut: false, spawnError: null },
     ...overrides,
   };
 }
@@ -108,6 +109,41 @@ test("error_path ignores a prior host and seeds its own settings", () => {
   assert.equal(observed.persistedBefore.intervalSec, 15);
   assert.equal(observed.persistedAfter.intervalSec, 15);
   assert.equal(seeded.passed, true);
+});
+
+test("error_path requires a valid seed, not only an unchanged file", () => {
+  // An omitted seed used to be tolerated; it must not be: unchanged invalid settings would pass.
+  const noSeed = behaviorAssertions("error_path", invalidIntervalEvidence({
+    expectedSettingsBeforeError: undefined,
+    persistedSettingsBeforeError: { intervalSec: 999, deliveryMode: "steer" },
+    persistedSettingsAfterError: { intervalSec: 999, deliveryMode: "steer" },
+  })).find((item) => item.id === "handled_error");
+  assert.equal(noSeed.passed, false);
+  assert.equal(JSON.parse(noSeed.observed).seedValid, false);
+
+  // A seed AutoTalk itself would reject is not a valid starting point.
+  assert.equal(isValidSettingsSeed({ intervalSec: 999, deliveryMode: "steer" }), false);
+  assert.equal(isValidSettingsSeed({ intervalSec: 4, deliveryMode: "steer" }), false);
+  assert.equal(isValidSettingsSeed({ intervalSec: 15.5, deliveryMode: "steer" }), false);
+  assert.equal(isValidSettingsSeed({ intervalSec: 15, deliveryMode: "nope" }), false);
+  assert.equal(isValidSettingsSeed(null), false);
+  assert.equal(isValidSettingsSeed(persistedSteer15), true);
+  assert.equal(isValidSettingsSeed({ intervalSec: 5, deliveryMode: "followUp" }), true);
+  assert.equal(isValidSettingsSeed({ intervalSec: 120, deliveryMode: "steer" }), true);
+});
+
+test("host_parse_error_supplemental records the parser host's own process failure", () => {
+  const parserAssertion = (overrides) => behaviorAssertions("error_path", invalidIntervalEvidence(overrides))
+    .find((item) => item.id === "host_parse_error_supplemental");
+
+  assert.equal(parserAssertion({}).passed, true);
+  assert.equal(parserAssertion({ parserHostExit: { code: 1, exitObserved: true } }).passed, false);
+  assert.equal(parserAssertion({
+    parserHostExit: { code: null, exitObserved: false, timedOut: true },
+  }).passed, false);
+  assert.equal(parserAssertion({ parserHostExit: undefined }).passed, false);
+  // The parser rejection itself is still required.
+  assert.equal(parserAssertion({ parserResponses: [] }).passed, false);
 });
 
 test("error_path requires AutoTalk's own validation warning, not only a host parse error", () => {

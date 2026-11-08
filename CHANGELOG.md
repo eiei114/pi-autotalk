@@ -12,6 +12,10 @@
 - Seed known-valid AutoTalk settings for the smoke `error_path` case so it no longer depends on
   the preceding `happy_path` host: the before-state is written explicitly, asserted against the
   expected seed, and a missing or wrong seed now fails `handled_error`.
+- Require the `error_path` seed to be a settings file AutoTalk itself would accept (5-120s integer
+  and a known delivery mode), so an unchanged but invalid starting file can no longer pass.
+- Record the supplemental parser host as a session of `error_path`: its nonzero exit, timeout or
+  spawn failure now fails `host_parse_error_supplemental` instead of being invisible.
 
 ## 0.1.14 - 2026-11-07
 
