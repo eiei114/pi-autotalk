@@ -45,8 +45,10 @@ const rpcArgs = [piCli, "--offline", "--no-session", "--no-tools", "--no-extensi
   "--no-context-files", "--no-prompt-templates", "--no-mcp", "-e", ".", "--mode", "rpc"];
 const PROBE_TIMEOUT_MS = 15_000;
 const CLEANUP_GRACE_MS = 1_000;
+// Out-of-range interval used to exercise AutoTalk's own validation branch.
+const INVALID_INTERVAL_INPUT = "999";
 
-function runPiRpc({ promptIds = [], malformed = false }) {
+function runPiRpc({ promptIds = [], malformed = false, inputValues = {} }) {
   return new Promise((resolveResult) => {
     const child = spawn(process.execPath, rpcArgs, {
       cwd: root,
@@ -58,6 +60,7 @@ function runPiRpc({ promptIds = [], malformed = false }) {
     let fullOutput = "";
     let lineBuffer = "";
     let promptIndex = 0;
+    let activePromptId;
     let deadlineExceeded = false;
     let settled = false;
     let childStarted = false;
@@ -86,12 +89,14 @@ function runPiRpc({ promptIds = [], malformed = false }) {
         return;
       }
       const id = promptIds[promptIndex++];
-      child.stdin.write(`${JSON.stringify({ id, type: "prompt", message: `/${id.replace(/^(?:load|feature|reload)-/, "autotalk:")}` })}\n`);
+      activePromptId = id;
+      child.stdin.write(`${JSON.stringify({ id, type: "prompt", message: `/${id.replace(/^(?:load|feature|reload|error)-/, "autotalk:")}` })}\n`);
     }
 
     function handleRecord(record) {
       if (record?.type === "extension_ui_request" && ["input", "select"].includes(record.method)) {
-        const value = record.method === "input" ? "15" : "steer";
+        const fallback = record.method === "input" ? "15" : "steer";
+        const value = inputValues[activePromptId] ?? fallback;
         child.stdin.write(`${JSON.stringify({ type: "extension_ui_response", id: record.id, value })}\n`);
       }
       if (record?.type === "response" && record.command === "prompt"
@@ -194,8 +199,23 @@ try {
   try { persistedSettings = readJson(settingsPath); } catch { persistedSettings = null; }
   const happyPath = makeRpcCase("happy_path", happyHost, null, { persistedSettings });
 
-  const errorHost = await runPiRpc({ malformed: true });
-  const errorPath = makeRpcCase("error_path", errorHost);
+  const persistedSettingsBeforeError = (() => {
+    try { return readJson(settingsPath); } catch { return null; }
+  })();
+  const errorHost = await runPiRpc({
+    promptIds: ["error-settings"],
+    inputValues: { "error-settings": INVALID_INTERVAL_INPUT },
+  });
+  const persistedSettingsAfterError = (() => {
+    try { return readJson(settingsPath); } catch { return null; }
+  })();
+  // Supplemental host check: the Pi RPC parser still rejects malformed frames.
+  const parserHost = await runPiRpc({ malformed: true });
+  const errorPath = makeRpcCase("error_path", errorHost, null, {
+    persistedSettingsBeforeError,
+    persistedSettingsAfterError,
+    parserResponses: parseJsonLines(parserHost.stdout),
+  });
 
   const firstReloadHost = await runPiRpc({ promptIds: ["reload-settings"] });
   const reloadedSettings = (() => {

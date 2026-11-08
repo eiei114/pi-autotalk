@@ -7,6 +7,9 @@ export const SDK_NAMES = [
 export const VERIFICATION_CONTRACT = "pi-sdk-behavior-v2";
 export const UNHANDLED_ERROR_PATTERN = /UnhandledPromiseRejection|uncaught exception|shutdown error/i;
 export const EXTENSION_LOAD_ERROR_PATTERN = /Failed to load extension|Error loading extension/i;
+/** AutoTalk's own validation warning for an out-of-range interval (extensions/index.ts openSettings). */
+export const FEATURE_WARNING_PATTERN = /Interval must be an integer from 5 to 120 seconds/;
+export const INVALID_INTERVAL_SEC = 999;
 
 export function parseJsonLines(output) {
   return output.split(/\r?\n/).flatMap((line) => {
@@ -54,12 +57,30 @@ export function behaviorAssertions(name, evidence) {
         && evidence.persistedSettings?.intervalSec === 15 && evidence.persistedSettings?.deliveryMode === "steer")];
   }
   if (name === "error_path") {
-    const parse = responses.find((row) => row?.type === "response" && row.command === "parse");
-    return [assertion("handled_error",
-      "Malformed RPC input is rejected with success=false and a parse error, without an unhandled host error",
-      parse ?? null,
-      parse?.success === false && typeof parse.error === "string" && parse.error.length > 0
-        && !UNHANDLED_ERROR_PATTERN.test(fullOutput))];
+    const response = promptResponse(responses, "error-settings");
+    const warning = responses.find((row) => row?.type === "extension_ui_request"
+      && row.method === "notify" && row.notifyType === "warning"
+      && typeof row.message === "string" && FEATURE_WARNING_PATTERN.test(row.message));
+    const persistedBefore = evidence.persistedSettingsBeforeError ?? null;
+    const persistedAfter = evidence.persistedSettingsAfterError ?? null;
+    const persistedUnchanged = persistedBefore !== null && persistedAfter !== null
+      && JSON.stringify(persistedAfter) === JSON.stringify(persistedBefore)
+      && persistedAfter.intervalSec !== INVALID_INTERVAL_SEC;
+    // Supplemental host check: the Pi RPC parser still rejects malformed frames.
+    const parse = (evidence.parserResponses ?? [])
+      .find((row) => row?.type === "response" && row.command === "parse");
+    return [
+      assertion("handled_error",
+        "An invalid AutoTalk interval is rejected by the extension with a warning and is not persisted, without an unhandled host error",
+        { response: response ?? null, warning: warning ?? null,
+          persistedBefore, persistedAfter, unhandledError: UNHANDLED_ERROR_PATTERN.test(fullOutput) },
+        response?.success === true && response.data?.disposition === "handled"
+          && !!warning && persistedUnchanged && !UNHANDLED_ERROR_PATTERN.test(fullOutput)),
+      assertion("host_parse_error_supplemental",
+        "Supplemental: malformed RPC frames are still rejected by the Pi host parser with success=false",
+        parse ?? null,
+        parse?.success === false && typeof parse.error === "string" && parse.error.length > 0),
+    ];
   }
   if (name === "reload_cleanup") {
     const response = promptResponse(responses, "reload-on");

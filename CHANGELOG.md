@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.15 - 2026-11-08
+
+### Fixed
+
+- Exercise AutoTalk's own invalid-interval handling in the Pi SDK smoke `error_path` case:
+  the live harness now invokes `/autotalk:settings` with an out-of-range value, asserts the
+  feature warning, and asserts invalid settings are not persisted. The Pi RPC parser check
+  remains as a supplemental assertion, and a negative contract test fails when the feature
+  warning is missing.
+
 ## 0.1.14 - 2026-11-07
 
 ### Changed
