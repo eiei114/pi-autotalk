@@ -1,5 +1,5 @@
 import { spawn, spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import {
@@ -32,6 +32,8 @@ const piCli = resolve(root, "node_modules/@earendil-works/pi-coding-agent", piMa
 const agentDir = mkdtempSync(join(tmpdir(), "pi-autotalk-smoke-"));
 const isolatedHome = join(agentDir, "home");
 mkdirSync(isolatedHome, { recursive: true });
+// AutoTalk persists settings under the isolated HOME so production settings stay untouched.
+const settingsPath = join(isolatedHome, ".pi", "agent", "extensions", "autotalk", "settings.json");
 const env = {
   ...process.env,
   PI_CODING_AGENT_DIR: agentDir,
@@ -47,7 +49,13 @@ const PROBE_TIMEOUT_MS = 15_000;
 const CLEANUP_GRACE_MS = 1_000;
 // Out-of-range interval used to exercise AutoTalk's own validation branch.
 const INVALID_INTERVAL_INPUT = "999";
+// Known-valid settings seeded for the error case so it never depends on another Pi host.
+const ERROR_PATH_SETTINGS = { intervalSec: 15, deliveryMode: "steer" };
 
+/**
+ * Runs one actual Pi RPC host (offline, no tools, isolated HOME) and answers its UI requests.
+ * Resolves with exit code, parsed stdout, and bounded diagnostics for contract assertions.
+ */
 function runPiRpc({ promptIds = [], malformed = false, inputValues = {} }) {
   return new Promise((resolveResult) => {
     const child = spawn(process.execPath, rpcArgs, {
@@ -142,6 +150,7 @@ function runPiRpc({ promptIds = [], malformed = false, inputValues = {} }) {
   });
 }
 
+/** Runs the native host shell once to prove the pinned Pi CLI version is reachable. */
 function runNativeShell() {
   let result;
   if (process.platform === "win32") {
@@ -171,6 +180,7 @@ function runNativeShell() {
   };
 }
 
+/** Builds one contract case from one or two Pi host runs plus the extra evidence it needs. */
 function makeRpcCase(name, first, second, extra = {}) {
   const sessions = second ? [first, second] : [first];
   const fullOutput = sessions.map((item) => item.fullOutput).join("\n--- second Pi host ---\n");
@@ -189,19 +199,28 @@ function makeRpcCase(name, first, second, extra = {}) {
   };
 }
 
+/**
+ * Writes a known-valid AutoTalk settings file into the isolated HOME.
+ * Used so a case's prerequisites never depend on an earlier host having succeeded.
+ */
+function seedSettings(settings) {
+  mkdirSync(dirname(settingsPath), { recursive: true });
+  writeFileSync(settingsPath, `${JSON.stringify(settings, null, 2)}\n`, "utf8");
+}
+
 try {
   const loadHost = await runPiRpc({ promptIds: ["load-on", "load-off"] });
   const extensionLoad = makeRpcCase("extension_load", loadHost);
 
   const happyHost = await runPiRpc({ promptIds: ["feature-settings", "feature-on", "feature-off"] });
-  const settingsPath = join(isolatedHome, ".pi", "agent", "extensions", "autotalk", "settings.json");
   let persistedSettings;
   try { persistedSettings = readJson(settingsPath); } catch { persistedSettings = null; }
   const happyPath = makeRpcCase("happy_path", happyHost, null, { persistedSettings });
 
-  const persistedSettingsBeforeError = (() => {
-    try { return readJson(settingsPath); } catch { return null; }
-  })();
+  // Seed known-valid settings first: error_path must test rejection of the invalid interval on its
+  // own, not fail for the same reason as the preceding happy-path host.
+  seedSettings(ERROR_PATH_SETTINGS);
+  const persistedSettingsBeforeError = readJson(settingsPath);
   const errorHost = await runPiRpc({
     promptIds: ["error-settings"],
     inputValues: { "error-settings": INVALID_INTERVAL_INPUT },
@@ -212,6 +231,7 @@ try {
   // Supplemental host check: the Pi RPC parser still rejects malformed frames.
   const parserHost = await runPiRpc({ malformed: true });
   const errorPath = makeRpcCase("error_path", errorHost, null, {
+    expectedSettingsBeforeError: ERROR_PATH_SETTINGS,
     persistedSettingsBeforeError,
     persistedSettingsAfterError,
     parserResponses: parseJsonLines(parserHost.stdout),

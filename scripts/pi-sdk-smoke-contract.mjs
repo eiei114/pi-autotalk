@@ -63,7 +63,12 @@ export function behaviorAssertions(name, evidence) {
       && typeof row.message === "string" && FEATURE_WARNING_PATTERN.test(row.message));
     const persistedBefore = evidence.persistedSettingsBeforeError ?? null;
     const persistedAfter = evidence.persistedSettingsAfterError ?? null;
-    const persistedUnchanged = persistedBefore !== null && persistedAfter !== null
+    // The before-state must be the known-valid seed: a missing or stale starting file would let the
+    // case pass without proving the extension actually rejected and preserved earlier settings.
+    const expectedBefore = evidence.expectedSettingsBeforeError ?? null;
+    const seedHonored = persistedBefore !== null
+      && (expectedBefore === null || JSON.stringify(expectedBefore) === JSON.stringify(persistedBefore));
+    const persistedUnchanged = seedHonored && persistedAfter !== null
       && JSON.stringify(persistedAfter) === JSON.stringify(persistedBefore)
       && persistedAfter.intervalSec !== INVALID_INTERVAL_SEC;
     // Supplemental host check: the Pi RPC parser still rejects malformed frames.
@@ -73,7 +78,7 @@ export function behaviorAssertions(name, evidence) {
       assertion("handled_error",
         "An invalid AutoTalk interval is rejected by the extension with a warning and is not persisted, without an unhandled host error",
         { response: response ?? null, warning: warning ?? null,
-          persistedBefore, persistedAfter, unhandledError: UNHANDLED_ERROR_PATTERN.test(fullOutput) },
+          expectedBefore, persistedBefore, persistedAfter, unhandledError: UNHANDLED_ERROR_PATTERN.test(fullOutput) },
         response?.success === true && response.data?.disposition === "handled"
           && !!warning && persistedUnchanged && !UNHANDLED_ERROR_PATTERN.test(fullOutput)),
       assertion("host_parse_error_supplemental",

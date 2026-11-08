@@ -9,6 +9,9 @@
   feature warning, and asserts invalid settings are not persisted. The Pi RPC parser check
   remains as a supplemental assertion, and a negative contract test fails when the feature
   warning is missing.
+- Seed known-valid AutoTalk settings for the smoke `error_path` case so it no longer depends on
+  the preceding `happy_path` host: the before-state is written explicitly, asserted against the
+  expected seed, and a missing or wrong seed now fails `handled_error`.
 
 ## 0.1.14 - 2026-11-07
 

@@ -30,6 +30,7 @@ function invalidIntervalEvidence(overrides = {}) {
     ],
     fullOutput: "",
     exit_code: 0,
+    expectedSettingsBeforeError: persistedSteer15,
     persistedSettingsBeforeError: persistedSteer15,
     persistedSettingsAfterError: persistedSteer15,
     parserResponses: [parseRejection()],
@@ -90,6 +91,25 @@ test("reload and shutdown assertions reject nonzero or unobserved process exit",
   assert.equal(assertions.find((item) => item.id === "clean_shutdown").passed, false);
 });
 
+test("error_path ignores a prior host and seeds its own settings", () => {
+  // The live harness seeds known-valid settings before the error host, so a failing happy-path
+  // host cannot change error_path's before-state. Model that: unseeded (null) fails closed and a
+  // seeded run passes with the exact seeded value.
+  const unseeded = behaviorAssertions("error_path", invalidIntervalEvidence({
+    persistedSettingsBeforeError: null,
+    persistedSettingsAfterError: null,
+  })).find((item) => item.id === "handled_error");
+  assert.equal(unseeded.passed, false);
+
+  const seeded = behaviorAssertions("error_path", invalidIntervalEvidence())
+    .find((item) => item.id === "handled_error");
+  const observed = JSON.parse(seeded.observed);
+  assert.equal(observed.expectedBefore.intervalSec, 15);
+  assert.equal(observed.persistedBefore.intervalSec, 15);
+  assert.equal(observed.persistedAfter.intervalSec, 15);
+  assert.equal(seeded.passed, true);
+});
+
 test("error_path requires AutoTalk's own validation warning, not only a host parse error", () => {
   const warn = (evidence) => behaviorAssertions("error_path", evidence)
     .find((item) => item.id === "handled_error");
@@ -121,6 +141,16 @@ test("error_path requires AutoTalk's own validation warning, not only a host par
   // An unhandled host error must fail.
   assert.equal(warn(invalidIntervalEvidence({
     fullOutput: "UnhandledPromiseRejection: boom",
+  })).passed, false);
+
+  // A missing seeded before-state must fail: rejection cannot be proven without a starting value.
+  assert.equal(warn(invalidIntervalEvidence({
+    persistedSettingsBeforeError: null,
+  })).passed, false);
+
+  // A before-state that is not the known-valid seed must fail, even when it is unchanged.
+  assert.equal(warn(invalidIntervalEvidence({
+    persistedSettingsBeforeError: { intervalSec: 10, deliveryMode: "followUp" },
   })).passed, false);
 
   // The positive fixture keeps both assertions green.
