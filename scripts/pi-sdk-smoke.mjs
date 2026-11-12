@@ -1,5 +1,5 @@
 import { spawn, spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import {
@@ -32,6 +32,8 @@ const piCli = resolve(root, "node_modules/@earendil-works/pi-coding-agent", piMa
 const agentDir = mkdtempSync(join(tmpdir(), "pi-autotalk-smoke-"));
 const isolatedHome = join(agentDir, "home");
 mkdirSync(isolatedHome, { recursive: true });
+// AutoTalk persists settings under the isolated HOME so production settings stay untouched.
+const settingsPath = join(isolatedHome, ".pi", "agent", "extensions", "autotalk", "settings.json");
 const env = {
   ...process.env,
   PI_CODING_AGENT_DIR: agentDir,
@@ -45,8 +47,16 @@ const rpcArgs = [piCli, "--offline", "--no-session", "--no-tools", "--no-extensi
   "--no-context-files", "--no-prompt-templates", "--no-mcp", "-e", ".", "--mode", "rpc"];
 const PROBE_TIMEOUT_MS = 15_000;
 const CLEANUP_GRACE_MS = 1_000;
+// Out-of-range interval used to exercise AutoTalk's own validation branch.
+const INVALID_INTERVAL_INPUT = "999";
+// Known-valid settings seeded for the error case so it never depends on another Pi host.
+const ERROR_PATH_SETTINGS = { intervalSec: 15, deliveryMode: "steer" };
 
-function runPiRpc({ promptIds = [], malformed = false }) {
+/**
+ * Runs one actual Pi RPC host (offline, no tools, isolated HOME) and answers its UI requests.
+ * Resolves with exit code, parsed stdout, and bounded diagnostics for contract assertions.
+ */
+function runPiRpc({ promptIds = [], malformed = false, inputValues = {} }) {
   return new Promise((resolveResult) => {
     const child = spawn(process.execPath, rpcArgs, {
       cwd: root,
@@ -58,6 +68,9 @@ function runPiRpc({ promptIds = [], malformed = false }) {
     let fullOutput = "";
     let lineBuffer = "";
     let promptIndex = 0;
+    let activePromptId;
+    // Answered input exchanges, so the contract can prove which value the extension actually saw.
+    const uiInputs = [];
     let deadlineExceeded = false;
     let settled = false;
     let childStarted = false;
@@ -67,7 +80,7 @@ function runPiRpc({ promptIds = [], malformed = false }) {
       if (settled) return;
       settled = true;
       clearTimeout(deadline);
-      resolveResult({ ...result, stdout, fullOutput, timedOut: deadlineExceeded });
+      resolveResult({ ...result, stdout, fullOutput, timedOut: deadlineExceeded, uiInputs });
     };
     const deadline = setTimeout(async () => {
       deadlineExceeded = true;
@@ -86,12 +99,17 @@ function runPiRpc({ promptIds = [], malformed = false }) {
         return;
       }
       const id = promptIds[promptIndex++];
-      child.stdin.write(`${JSON.stringify({ id, type: "prompt", message: `/${id.replace(/^(?:load|feature|reload)-/, "autotalk:")}` })}\n`);
+      activePromptId = id;
+      child.stdin.write(`${JSON.stringify({ id, type: "prompt", message: `/${id.replace(/^(?:load|feature|reload|error)-/, "autotalk:")}` })}\n`);
     }
 
     function handleRecord(record) {
       if (record?.type === "extension_ui_request" && ["input", "select"].includes(record.method)) {
-        const value = record.method === "input" ? "15" : "steer";
+        const fallback = record.method === "input" ? "15" : "steer";
+        const value = inputValues[activePromptId] ?? fallback;
+        if (record.method === "input") {
+          uiInputs.push({ promptId: activePromptId ?? null, title: record.title ?? null, value });
+        }
         child.stdin.write(`${JSON.stringify({ type: "extension_ui_response", id: record.id, value })}\n`);
       }
       if (record?.type === "response" && record.command === "prompt"
@@ -137,6 +155,7 @@ function runPiRpc({ promptIds = [], malformed = false }) {
   });
 }
 
+/** Runs the native host shell once to prove the pinned Pi CLI version is reachable. */
 function runNativeShell() {
   let result;
   if (process.platform === "win32") {
@@ -166,6 +185,7 @@ function runNativeShell() {
   };
 }
 
+/** Builds one contract case from one or two Pi host runs plus the extra evidence it needs. */
 function makeRpcCase(name, first, second, extra = {}) {
   const sessions = second ? [first, second] : [first];
   const fullOutput = sessions.map((item) => item.fullOutput).join("\n--- second Pi host ---\n");
@@ -184,18 +204,55 @@ function makeRpcCase(name, first, second, extra = {}) {
   };
 }
 
+/**
+ * Writes a known-valid AutoTalk settings file into the isolated HOME.
+ * Used so a case's prerequisites never depend on an earlier host having succeeded.
+ */
+function seedSettings(settings) {
+  mkdirSync(dirname(settingsPath), { recursive: true });
+  writeFileSync(settingsPath, `${JSON.stringify(settings, null, 2)}\n`, "utf8");
+}
+
 try {
   const loadHost = await runPiRpc({ promptIds: ["load-on", "load-off"] });
   const extensionLoad = makeRpcCase("extension_load", loadHost);
 
   const happyHost = await runPiRpc({ promptIds: ["feature-settings", "feature-on", "feature-off"] });
-  const settingsPath = join(isolatedHome, ".pi", "agent", "extensions", "autotalk", "settings.json");
   let persistedSettings;
   try { persistedSettings = readJson(settingsPath); } catch { persistedSettings = null; }
   const happyPath = makeRpcCase("happy_path", happyHost, null, { persistedSettings });
 
-  const errorHost = await runPiRpc({ malformed: true });
-  const errorPath = makeRpcCase("error_path", errorHost);
+  // Seed known-valid settings first: error_path must test rejection of the invalid interval on its
+  // own, not fail for the same reason as the preceding happy-path host.
+  seedSettings(ERROR_PATH_SETTINGS);
+  const persistedSettingsBeforeError = readJson(settingsPath);
+  const errorHost = await runPiRpc({
+    promptIds: ["error-settings"],
+    inputValues: { "error-settings": INVALID_INTERVAL_INPUT },
+  });
+  const persistedSettingsAfterError = (() => {
+    try { return readJson(settingsPath); } catch { return null; }
+  })();
+  // Supplemental host check: the Pi RPC parser still rejects malformed frames.
+  const parserHost = await runPiRpc({ malformed: true });
+  // The parser host is a session of this case too, so a nonzero exit or a hang after the rejection
+  // is recorded instead of being invisible behind a passing parser record.
+  const parserHostExit = {
+    code: parserHost.code ?? null,
+    exitObserved: parserHost.exitObserved === true,
+    timedOut: parserHost.timedOut === true,
+    spawnError: parserHost.spawnError ?? null,
+  };
+  const errorPath = makeRpcCase("error_path", errorHost, parserHost, {
+    // The actual `/autotalk:settings` interval request and the value we answered it with: a warning
+    // without that exchange would not prove the invalid input reached AutoTalk's validation branch.
+    errorInputExchanges: errorHost.uiInputs,
+    expectedSettingsBeforeError: ERROR_PATH_SETTINGS,
+    persistedSettingsBeforeError,
+    persistedSettingsAfterError,
+    parserResponses: parseJsonLines(parserHost.stdout),
+    parserHostExit,
+  });
 
   const firstReloadHost = await runPiRpc({ promptIds: ["reload-settings"] });
   const reloadedSettings = (() => {

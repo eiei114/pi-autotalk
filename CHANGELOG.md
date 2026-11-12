@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.1.15 - 2026-11-08
+
+### Fixed
+
+- Exercise AutoTalk's own invalid-interval handling in the Pi SDK smoke `error_path` case:
+  the live harness now invokes `/autotalk:settings` with an out-of-range value, asserts the
+  feature warning, and asserts invalid settings are not persisted. The Pi RPC parser check
+  remains as a supplemental assertion, and a negative contract test fails when the feature
+  warning is missing.
+- Seed known-valid AutoTalk settings for the smoke `error_path` case so it no longer depends on
+  the preceding `happy_path` host: the before-state is written explicitly, asserted against the
+  expected seed, and a missing or wrong seed now fails `handled_error`.
+- Require the `error_path` seed to be a settings file AutoTalk itself would accept (5-120s integer
+  and a known delivery mode), so an unchanged but invalid starting file can no longer pass.
+- Record the supplemental parser host as a session of `error_path`: its nonzero exit, timeout or
+  spawn failure now fails `host_parse_error_supplemental` instead of being invisible.
+- Record the actual `/autotalk:settings` interval exchange for `error_path` and require a matching
+  `999` answer, so a warning emitted without the invalid request reaching AutoTalk's validation
+  branch fails `handled_error` (negative contract test added).
+
 ## 0.1.14 - 2026-11-07
 
 ### Changed
