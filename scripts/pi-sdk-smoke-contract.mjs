@@ -9,6 +9,8 @@ export const UNHANDLED_ERROR_PATTERN = /UnhandledPromiseRejection|uncaught excep
 export const EXTENSION_LOAD_ERROR_PATTERN = /Failed to load extension|Error loading extension/i;
 /** AutoTalk's own validation warning for an out-of-range interval (extensions/index.ts openSettings). */
 export const FEATURE_WARNING_PATTERN = /Interval must be an integer from 5 to 120 seconds/;
+/** The interval prompt AutoTalk issues from /autotalk:settings; its answer carries the tested value. */
+export const INTERVAL_PROMPT_PATTERN = /AutoTalk interval seconds/;
 export const INVALID_INTERVAL_SEC = 999;
 /** Must match AutoTalk's accepted range and delivery modes (lib/autotalk.ts). */
 export const VALID_INTERVAL_MIN = 5;
@@ -75,6 +77,11 @@ export function behaviorAssertions(name, evidence) {
       && typeof row.message === "string" && FEATURE_WARNING_PATTERN.test(row.message));
     const persistedBefore = evidence.persistedSettingsBeforeError ?? null;
     const persistedAfter = evidence.persistedSettingsAfterError ?? null;
+    // The warning alone proves nothing: the invalid value must have been requested by AutoTalk's
+    // own interval prompt and answered with it, so a warning emitted without the exchange fails.
+    const invalidInputRequested = (evidence.errorInputExchanges ?? []).some((exchange) =>
+      typeof exchange?.title === "string" && INTERVAL_PROMPT_PATTERN.test(exchange.title)
+      && String(exchange.value ?? "").trim() === String(INVALID_INTERVAL_SEC));
     // The before-state must be the known-valid seed: a missing or stale starting file would let the
     // case pass without proving the extension actually rejected and preserved earlier settings.
     const expectedBefore = evidence.expectedSettingsBeforeError ?? null;
@@ -92,11 +99,12 @@ export function behaviorAssertions(name, evidence) {
     return [
       assertion("handled_error",
         "An invalid AutoTalk interval is rejected by the extension with a warning and is not persisted, without an unhandled host error",
-        { response: response ?? null, warning: warning ?? null,
+        { response: response ?? null, warning: warning ?? null, invalidInputRequested,
           expectedBefore, seedValid, persistedBefore, persistedAfter,
           unhandledError: UNHANDLED_ERROR_PATTERN.test(fullOutput) },
         response?.success === true && response.data?.disposition === "handled"
-          && !!warning && persistedUnchanged && !UNHANDLED_ERROR_PATTERN.test(fullOutput)),
+          && !!warning && invalidInputRequested && persistedUnchanged
+          && !UNHANDLED_ERROR_PATTERN.test(fullOutput)),
       assertion("host_parse_error_supplemental",
         "Supplemental: malformed RPC frames are still rejected by the Pi host parser with success=false, and the parser host exits cleanly",
         { parse: parse ?? null, parserHostExit: parserHostExit ?? null },

@@ -69,6 +69,8 @@ function runPiRpc({ promptIds = [], malformed = false, inputValues = {} }) {
     let lineBuffer = "";
     let promptIndex = 0;
     let activePromptId;
+    // Answered input exchanges, so the contract can prove which value the extension actually saw.
+    const uiInputs = [];
     let deadlineExceeded = false;
     let settled = false;
     let childStarted = false;
@@ -78,7 +80,7 @@ function runPiRpc({ promptIds = [], malformed = false, inputValues = {} }) {
       if (settled) return;
       settled = true;
       clearTimeout(deadline);
-      resolveResult({ ...result, stdout, fullOutput, timedOut: deadlineExceeded });
+      resolveResult({ ...result, stdout, fullOutput, timedOut: deadlineExceeded, uiInputs });
     };
     const deadline = setTimeout(async () => {
       deadlineExceeded = true;
@@ -105,6 +107,9 @@ function runPiRpc({ promptIds = [], malformed = false, inputValues = {} }) {
       if (record?.type === "extension_ui_request" && ["input", "select"].includes(record.method)) {
         const fallback = record.method === "input" ? "15" : "steer";
         const value = inputValues[activePromptId] ?? fallback;
+        if (record.method === "input") {
+          uiInputs.push({ promptId: activePromptId ?? null, title: record.title ?? null, value });
+        }
         child.stdin.write(`${JSON.stringify({ type: "extension_ui_response", id: record.id, value })}\n`);
       }
       if (record?.type === "response" && record.command === "prompt"
@@ -239,6 +244,9 @@ try {
     spawnError: parserHost.spawnError ?? null,
   };
   const errorPath = makeRpcCase("error_path", errorHost, parserHost, {
+    // The actual `/autotalk:settings` interval request and the value we answered it with: a warning
+    // without that exchange would not prove the invalid input reached AutoTalk's validation branch.
+    errorInputExchanges: errorHost.uiInputs,
     expectedSettingsBeforeError: ERROR_PATH_SETTINGS,
     persistedSettingsBeforeError,
     persistedSettingsAfterError,

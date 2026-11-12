@@ -16,6 +16,9 @@
   and a known delivery mode), so an unchanged but invalid starting file can no longer pass.
 - Record the supplemental parser host as a session of `error_path`: its nonzero exit, timeout or
   spawn failure now fails `host_parse_error_supplemental` instead of being invisible.
+- Record the actual `/autotalk:settings` interval exchange for `error_path` and require a matching
+  `999` answer, so a warning emitted without the invalid request reaching AutoTalk's validation
+  branch fails `handled_error` (negative contract test added).
 
 ## 0.1.14 - 2026-11-07
 

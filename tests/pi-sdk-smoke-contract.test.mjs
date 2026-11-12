@@ -30,6 +30,7 @@ function invalidIntervalEvidence(overrides = {}) {
     ],
     fullOutput: "",
     exit_code: 0,
+    errorInputExchanges: [{ promptId: "error-settings", title: "AutoTalk interval seconds (5-120):", value: "999" }],
     expectedSettingsBeforeError: persistedSteer15,
     persistedSettingsBeforeError: persistedSteer15,
     persistedSettingsAfterError: persistedSteer15,
@@ -191,4 +192,26 @@ test("error_path requires AutoTalk's own validation warning, not only a host par
 
   // The positive fixture keeps both assertions green.
   assert.ok(behaviorAssertions("error_path", invalidIntervalEvidence()).every((item) => item.passed));
+});
+
+test("error_path requires the actual invalid interval exchange, not only a warning", () => {
+  const handled = (evidence) => behaviorAssertions("error_path", evidence)
+    .find((item) => item.id === "handled_error");
+
+  // A warning emitted without ever requesting an interval cannot show which value was rejected.
+  assert.equal(handled(invalidIntervalEvidence({ errorInputExchanges: [] })).passed, false);
+
+  // A recorded exchange that answered with a valid value is not the invalid-input repro.
+  assert.equal(handled(invalidIntervalEvidence({
+    errorInputExchanges: [{ promptId: "error-settings", title: "AutoTalk interval seconds (5-120):", value: "15" }],
+  })).passed, false);
+
+  // An unrelated input prompt carrying 999 is not AutoTalk's interval prompt.
+  assert.equal(handled(invalidIntervalEvidence({
+    errorInputExchanges: [{ promptId: "error-settings", title: "Some other value (1-9):", value: "999" }],
+  })).passed, false);
+
+  // The observed run records the real interval prompt and the invalid answer.
+  const observed = JSON.parse(handled(invalidIntervalEvidence()).observed);
+  assert.equal(observed.invalidInputRequested, true);
 });
