@@ -96,6 +96,90 @@ test("a due send reuses the editor snapshot from the change check", async () => 
   }
 });
 
+test("a due tick preserves slash commands and still sends ordinary editor text", async () => {
+  const originalNow = Date.now;
+  const originalSetInterval = globalThis.setInterval;
+  const originalClearInterval = globalThis.clearInterval;
+  const originalHome = process.env.HOME;
+  const originalUserProfile = process.env.USERPROFILE;
+  const home = await mkdtemp(join(tmpdir(), "pi-autotalk-home-"));
+  let now = 1_000;
+  let editorText = "";
+  const timers = [];
+  const commands = new Map();
+  const sentMessages = [];
+
+  Date.now = () => now;
+  globalThis.setInterval = (callback, delay) => {
+    const timer = { callback, delay };
+    timers.push(timer);
+    return timer;
+  };
+  globalThis.clearInterval = () => {};
+  process.env.HOME = home;
+  process.env.USERPROFILE = home;
+
+  try {
+    registerAutoTalk({
+      on() {},
+      registerCommand(name, options) {
+        commands.set(name, options.handler);
+      },
+      sendUserMessage(...args) {
+        sentMessages.push(args);
+      },
+    });
+
+    const ctx = {
+      hasUI: true,
+      isIdle: () => true,
+      ui: {
+        getEditorText: () => editorText,
+        setEditorText(text) {
+          editorText = text;
+        },
+        setStatus() {},
+        theme: { fg: (_color, text) => text },
+      },
+    };
+
+    await commands.get("autotalk:on")("", ctx);
+    const editorWatcher = timers.find((timer) => timer.delay === 250);
+    const tickTimer = timers.find((timer) => timer.delay === 10_000);
+    assert.ok(editorWatcher);
+    assert.ok(tickTimer);
+
+    const slashCommand = "/autotalk:off  keep this\tbuffer  ";
+    editorText = slashCommand;
+    editorWatcher.callback();
+    now += 2_001;
+    tickTimer.callback();
+
+    assert.equal(sentMessages.length, 0);
+    assert.equal(editorText, slashCommand);
+
+    const thought = "A regular thought to send";
+    editorText = thought;
+    editorWatcher.callback();
+    now += 2_001;
+    tickTimer.callback();
+
+    assert.equal(sentMessages.length, 1);
+    assert.equal(sentMessages[0][0].includes(thought), true);
+    assert.equal(editorText, "");
+    await commands.get("autotalk:off")("", ctx);
+  } finally {
+    Date.now = originalNow;
+    globalThis.setInterval = originalSetInterval;
+    globalThis.clearInterval = originalClearInterval;
+    if (originalHome === undefined) delete process.env.HOME;
+    else process.env.HOME = originalHome;
+    if (originalUserProfile === undefined) delete process.env.USERPROFILE;
+    else process.env.USERPROFILE = originalUserProfile;
+    await rm(home, { recursive: true, force: true });
+  }
+});
+
 test("settings commands persist and reflect updates without changing timer behavior", async () => {
   const originalNow = Date.now;
   const originalSetInterval = globalThis.setInterval;
