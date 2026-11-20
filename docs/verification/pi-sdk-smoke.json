@@ -2,10 +2,10 @@
   "schema_version": 1,
   "verification_contract": "pi-sdk-behavior-v2",
   "sdk_versions": {
-    "@earendil-works/pi-agent-core": "1.5.0",
-    "@earendil-works/pi-ai": "1.5.0",
-    "@earendil-works/pi-coding-agent": "1.5.0",
-    "@earendil-works/pi-tui": "1.5.0"
+    "@earendil-works/pi-agent-core": "1.5.2",
+    "@earendil-works/pi-ai": "1.5.2",
+    "@earendil-works/pi-coding-agent": "1.5.2",
+    "@earendil-works/pi-tui": "1.5.2"
   },
   "platform": "win32",
   "model_inference": "none; actual Pi RPC host handles AutoTalk commands using isolated settings",
@@ -17,12 +17,12 @@
       "command": "npm run smoke:pi",
       "exit_code": 0,
       "passed": true,
-      "evidence": "{\"type\":\"extension_ui_request\",\"id\":\"f6e0692e-f61a-42a6-b925-e1244e359763\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\"}\n{\"type\":\"extension_ui_request\",\"id\":\"57eb10c8-433d-4015-9514-7b968a75e682\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\",\"statusText\":\"\\u001b[38;5;5mAutoTalk\\u001b[39m\\u001b[39m\\u001b[2m on 10s followUp\\u001b[22;39m\"}\n{\"id\":\"load-on\",\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}}\n{\"type\":\"extension_ui_request\",\"id\":\"ab44c0da-8395-4c5d-90cf-e4144e363586\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\"}\n{\"id\":\"load-off\",\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}}\n",
+      "evidence": "{\"type\":\"extension_ui_request\",\"id\":\"75f353c2-b8bf-468e-8a5f-50fbb1e5d8b7\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\"}\n{\"type\":\"extension_ui_request\",\"id\":\"a196c894-adae-4b02-92c5-bc38305433a9\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\",\"statusText\":\"\\u001b[38;5;5mAutoTalk\\u001b[39m\\u001b[39m\\u001b[2m on 10s followUp\\u001b[22;39m\"}\n{\"id\":\"load-on\",\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}}\n{\"type\":\"extension_ui_request\",\"id\":\"b5ec6c40-9ea7-4295-bb05-7dd7d855fdc4\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\"}\n{\"id\":\"load-off\",\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}}\n",
       "assertions": [
         {
           "id": "extension_registered",
           "expected": "Actual Pi handles /autotalk:on and emits AutoTalk's enabled status",
-          "observed": "{\"response\":{\"id\":\"load-on\",\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}},\"status\":{\"type\":\"extension_ui_request\",\"id\":\"57eb10c8-433d-4015-9514-7b968a75e682\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\",\"statusText\":\"\\u001b[38;5;5mAutoTalk\\u001b[39m\\u001b[39m\\u001b[2m on 10s followUp\\u001b[22;39m\"}}",
+          "observed": "{\"response\":{\"id\":\"load-on\",\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}},\"status\":{\"type\":\"extension_ui_request\",\"id\":\"a196c894-adae-4b02-92c5-bc38305433a9\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\",\"statusText\":\"\\u001b[38;5;5mAutoTalk\\u001b[39m\\u001b[39m\\u001b[2m on 10s followUp\\u001b[22;39m\"}}",
           "passed": true
         }
       ]
@@ -32,12 +32,12 @@
       "command": "npm run smoke:pi",
       "exit_code": 0,
       "passed": true,
-      "evidence": "{\"type\":\"extension_ui_request\",\"id\":\"f4a28e7c-5ed6-4b42-a78f-c4ec1293e091\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\"}\n{\"type\":\"extension_ui_request\",\"id\":\"8cdf32c3-90fb-49bc-93af-2bbb9f096db9\",\"method\":\"input\",\"title\":\"AutoTalk interval seconds (5-120):\",\"placeholder\":\"10\"}\n{\"type\":\"extension_ui_request\",\"id\":\"3ba47a15-05d2-4789-b56b-7294fdeb7d0d\",\"method\":\"select\",\"title\":\"AutoTalk delivery mode:\",\"options\":[\"followUp\",\"steer\"]}\n{\"type\":\"extension_ui_request\",\"id\":\"bf40d884-c9d8-4383-9d33-15461e10fc0f\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\"}\n{\"id\":\"feature-settings\",\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}}\n{\"type\":\"extension_ui_request\",\"id\":\"0d36d0f5-1138-41b9-baf3-aa233e7f64ac\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\",\"statusText\":\"\\u001b[38;5;5mAutoTalk\\u001b[39m\\u001b[39m\\u001b[2m on 15s steer\\u001b[22;39m\"}\n{\"id\":\"feature-on\",\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}}\n{\"type\":\"extension_ui_request\",\"id\":\"e2f8ff76-a1ff-4ec1-88d5-fe22905d3958\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\"}\n{\"id\":\"feature-off\",\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}}\n",
+      "evidence": "{\"type\":\"extension_ui_request\",\"id\":\"d53b11f7-aa01-43de-91eb-fe68a0df703e\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\"}\n{\"type\":\"extension_ui_request\",\"id\":\"2eb46a39-59ce-4989-8a6f-55d4d0699bf5\",\"method\":\"input\",\"title\":\"AutoTalk interval seconds (5-120):\",\"placeholder\":\"10\"}\n{\"type\":\"extension_ui_request\",\"id\":\"d6e64028-6a7b-400f-9e35-97600449c3b6\",\"method\":\"select\",\"title\":\"AutoTalk delivery mode:\",\"options\":[\"followUp\",\"steer\"]}\n{\"type\":\"extension_ui_request\",\"id\":\"c1f58d09-5b6a-43ed-9276-d68cf99ca967\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\"}\n{\"id\":\"feature-settings\",\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}}\n{\"type\":\"extension_ui_request\",\"id\":\"ebec75fd-4126-4ebe-9d38-2d001dbfb877\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\",\"statusText\":\"\\u001b[38;5;5mAutoTalk\\u001b[39m\\u001b[39m\\u001b[2m on 15s steer\\u001b[22;39m\"}\n{\"id\":\"feature-on\",\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}}\n{\"type\":\"extension_ui_request\",\"id\":\"5e4c92d4-ed20-4497-9c01-74a70890ca5e\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\"}\n{\"id\":\"feature-off\",\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}}\n",
       "assertions": [
         {
           "id": "feature_response",
           "expected": "Settings entered through Pi RPC persist and the enabled command reports the configured interval and mode",
-          "observed": "{\"response\":{\"id\":\"feature-on\",\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}},\"status\":{\"type\":\"extension_ui_request\",\"id\":\"0d36d0f5-1138-41b9-baf3-aa233e7f64ac\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\",\"statusText\":\"\\u001b[38;5;5mAutoTalk\\u001b[39m\\u001b[39m\\u001b[2m on 15s steer\\u001b[22;39m\"},\"persistedSettings\":{\"intervalSec\":15,\"deliveryMode\":\"steer\"}}",
+          "observed": "{\"response\":{\"id\":\"feature-on\",\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}},\"status\":{\"type\":\"extension_ui_request\",\"id\":\"ebec75fd-4126-4ebe-9d38-2d001dbfb877\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\",\"statusText\":\"\\u001b[38;5;5mAutoTalk\\u001b[39m\\u001b[39m\\u001b[2m on 15s steer\\u001b[22;39m\"},\"persistedSettings\":{\"intervalSec\":15,\"deliveryMode\":\"steer\"}}",
           "passed": true
         }
       ]
@@ -47,12 +47,12 @@
       "command": "npm run smoke:pi",
       "exit_code": 0,
       "passed": true,
-      "evidence": "{\"type\":\"extension_ui_request\",\"id\":\"ba9f6f6b-4368-4e22-be48-483726be262b\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\"}\n{\"type\":\"extension_ui_request\",\"id\":\"6248555d-510a-40c3-8fef-2724d080b3ec\",\"method\":\"input\",\"title\":\"AutoTalk interval seconds (5-120):\",\"placeholder\":\"15\"}\n{\"type\":\"extension_ui_request\",\"id\":\"ac4c6b50-7648-4946-afb5-dfef8959725f\",\"method\":\"notify\",\"message\":\"Interval must be an integer from 5 to 120 seconds.\",\"notifyType\":\"warning\"}\n{\"id\":\"error-settings\",\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}}\n\n--- second Pi host ---\n{\"type\":\"extension_ui_request\",\"id\":\"112e8cf1-2c3c-4e78-aac8-624a1c0bff04\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\"}\n{\"type\":\"response\",\"command\":\"parse\",\"success\":false,\"error\":\"Failed to parse command: Unexpected token 'o', \\\"not-json\\\" is not valid JSON\"}\n",
+      "evidence": "{\"type\":\"extension_ui_request\",\"id\":\"096f3b0c-fefb-4ac5-91da-f35f38d7d2b4\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\"}\n{\"type\":\"extension_ui_request\",\"id\":\"67e58348-162f-4923-99c7-4b239f3cd420\",\"method\":\"input\",\"title\":\"AutoTalk interval seconds (5-120):\",\"placeholder\":\"15\"}\n{\"type\":\"extension_ui_request\",\"id\":\"5bf57b40-1c7b-49eb-af3d-41e40694fce5\",\"method\":\"notify\",\"message\":\"Interval must be an integer from 5 to 120 seconds.\",\"notifyType\":\"warning\"}\n{\"id\":\"error-settings\",\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}}\n\n--- second Pi host ---\n{\"type\":\"extension_ui_request\",\"id\":\"00b39b44-d056-42bb-8a63-13e436b610b5\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\"}\n{\"type\":\"response\",\"command\":\"parse\",\"success\":false,\"error\":\"Failed to parse command: Unexpected token 'o', \\\"not-json\\\" is not valid JSON\"}\n",
       "assertions": [
         {
           "id": "handled_error",
           "expected": "An invalid AutoTalk interval is rejected by the extension with a warning and is not persisted, without an unhandled host error",
-          "observed": "{\"response\":{\"id\":\"error-settings\",\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}},\"warning\":{\"type\":\"extension_ui_request\",\"id\":\"ac4c6b50-7648-4946-afb5-dfef8959725f\",\"method\":\"notify\",\"message\":\"Interval must be an integer from 5 to 120 seconds.\",\"notifyType\":\"warning\"},\"invalidInputRequested\":true,\"expectedBefore\":{\"intervalSec\":15,\"deliveryMode\":\"steer\"},\"seedValid\":true,\"persistedBefore\":{\"intervalSec\":15,\"deliveryMode\":\"steer\"},\"persistedAfter\":{\"intervalSec\":15,\"deliveryMode\":\"steer\"},\"unhandledError\":false}",
+          "observed": "{\"response\":{\"id\":\"error-settings\",\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}},\"warning\":{\"type\":\"extension_ui_request\",\"id\":\"5bf57b40-1c7b-49eb-af3d-41e40694fce5\",\"method\":\"notify\",\"message\":\"Interval must be an integer from 5 to 120 seconds.\",\"notifyType\":\"warning\"},\"invalidInputRequested\":true,\"expectedBefore\":{\"intervalSec\":15,\"deliveryMode\":\"steer\"},\"seedValid\":true,\"persistedBefore\":{\"intervalSec\":15,\"deliveryMode\":\"steer\"},\"persistedAfter\":{\"intervalSec\":15,\"deliveryMode\":\"steer\"},\"unhandledError\":false}",
           "passed": true
         },
         {
@@ -68,7 +68,7 @@
       "command": "npm run smoke:pi",
       "exit_code": 0,
       "passed": true,
-      "evidence": "{\"type\":\"extension_ui_request\",\"id\":\"aae95834-56b6-43d9-b78d-815eb0e413f7\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\"}\n{\"type\":\"extension_ui_request\",\"id\":\"ea22d208-1a7a-4260-b207-ca896b0fe6f0\",\"method\":\"input\",\"title\":\"AutoTalk interval seconds (5-120):\",\"placeholder\":\"15\"}\n{\"type\":\"extension_ui_request\",\"id\":\"20ef2e90-d66a-44fb-a6e9-24d6d542a422\",\"method\":\"select\",\"title\":\"AutoTalk delivery mode:\",\"options\":[\"followUp\",\"steer\"]}\n{\"type\":\"extension_ui_request\",\"id\":\"da707d91-199a-498a-9ae3-ac689d8bc0fe\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\"}\n{\"id\":\"reload-settings\",\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}}\n\n--- second Pi host ---\n{\"type\":\"extension_ui_request\",\"id\":\"167a87ff-9ae4-448e-a8c8-fd9345355132\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\"}\n{\"type\":\"extension_ui_request\",\"id\":\"46d4246b-2312-4956-b7ee-be622735d704\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\",\"statusText\":\"\\u001b[38;5;5mAutoTalk\\u001b[39m\\u001b[39m\\u001b[2m on 15s steer\\u001b[22;39m\"}\n{\"id\":\"reload-on\",\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}}\n{\"type\":\"extension_ui_request\",\"id\":\"0c311df7-15d4-4f3b-a3b6-a6518bd3ba82\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\"}\n{\"id\":\"reload-off\",\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}}\n",
+      "evidence": "{\"type\":\"extension_ui_request\",\"id\":\"56b87035-65a9-48bf-89f3-5963573241d0\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\"}\n{\"type\":\"extension_ui_request\",\"id\":\"c89a0af6-8477-47d3-9750-b9444b17064f\",\"method\":\"input\",\"title\":\"AutoTalk interval seconds (5-120):\",\"placeholder\":\"15\"}\n{\"type\":\"extension_ui_request\",\"id\":\"ccd46023-5476-4dd1-8d5f-630f695a5d2f\",\"method\":\"select\",\"title\":\"AutoTalk delivery mode:\",\"options\":[\"followUp\",\"steer\"]}\n{\"type\":\"extension_ui_request\",\"id\":\"57e28660-3358-4a17-b22e-b383333e621c\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\"}\n{\"id\":\"reload-settings\",\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}}\n\n--- second Pi host ---\n{\"type\":\"extension_ui_request\",\"id\":\"840e3e57-ac5b-4873-bf77-788bd144e2f1\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\"}\n{\"type\":\"extension_ui_request\",\"id\":\"2620ba47-c8d1-4b3d-b90d-5e8fa2d4ace7\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\",\"statusText\":\"\\u001b[38;5;5mAutoTalk\\u001b[39m\\u001b[39m\\u001b[2m on 15s steer\\u001b[22;39m\"}\n{\"id\":\"reload-on\",\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}}\n{\"type\":\"extension_ui_request\",\"id\":\"2bc63351-561e-4ad7-a01b-cf6f38b48ecc\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\"}\n{\"id\":\"reload-off\",\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}}\n",
       "assertions": [
         {
           "id": "reloaded_extension_registered",
@@ -79,7 +79,7 @@
         {
           "id": "reloaded_feature_response",
           "expected": "The reloaded host emits the feature status using settings persisted by the first host",
-          "observed": "{\"status\":{\"type\":\"extension_ui_request\",\"id\":\"46d4246b-2312-4956-b7ee-be622735d704\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\",\"statusText\":\"\\u001b[38;5;5mAutoTalk\\u001b[39m\\u001b[39m\\u001b[2m on 15s steer\\u001b[22;39m\"},\"persistedSettings\":{\"intervalSec\":15,\"deliveryMode\":\"steer\"}}",
+          "observed": "{\"status\":{\"type\":\"extension_ui_request\",\"id\":\"2620ba47-c8d1-4b3d-b90d-5e8fa2d4ace7\",\"method\":\"setStatus\",\"statusKey\":\"autotalk\",\"statusText\":\"\\u001b[38;5;5mAutoTalk\\u001b[39m\\u001b[39m\\u001b[2m on 15s steer\\u001b[22;39m\"},\"persistedSettings\":{\"intervalSec\":15,\"deliveryMode\":\"steer\"}}",
           "passed": true
         },
         {
@@ -95,12 +95,12 @@
       "command": "npm run smoke:pi",
       "exit_code": 0,
       "passed": true,
-      "evidence": "1.5.0\n",
+      "evidence": "1.5.2\n",
       "assertions": [
         {
           "id": "native_shell_boundary",
           "expected": "Native host shell launches the locally pinned Pi CLI and returns its exact SDK version",
-          "observed": "{\"exit_code\":0,\"output\":\"1.5.0\",\"expectedVersion\":\"1.5.0\"}",
+          "observed": "{\"exit_code\":0,\"output\":\"1.5.2\",\"expectedVersion\":\"1.5.2\"}",
           "passed": true
         }
       ]
