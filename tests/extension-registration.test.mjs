@@ -5,6 +5,7 @@ import { join } from "node:path";
 import test from "node:test";
 
 const { default: registerAutoTalk } = await import("../extensions/index.ts");
+const { formatEmptyPrompt, formatThoughtMemo } = await import("../lib/autotalk.ts");
 
 test("extension registers AutoTalk commands", () => {
   const commands = [];
@@ -252,6 +253,75 @@ test("a due tick preserves slash commands and still sends ordinary editor text",
     else process.env.USERPROFILE = originalUserProfile;
     await rm(home, { recursive: true, force: true });
   }
+});
+
+test("empty-editor follow-ups require a new memo in the current enable cycle", async (t) => {
+  t.mock.timers.enable({ apis: ["Date", "setInterval"] });
+  const commands = new Map();
+  const sentMessages = [];
+  let editorText = "";
+
+  registerAutoTalk({
+    on() {},
+    registerCommand(name, options) {
+      commands.set(name, options.handler);
+    },
+    sendUserMessage(text) {
+      sentMessages.push(text);
+    },
+  });
+
+  const ctx = {
+    hasUI: true,
+    isIdle: () => true,
+    ui: {
+      getEditorText: () => editorText,
+      setEditorText(text) {
+        editorText = text;
+      },
+      setStatus() {},
+      theme: { fg: (_color, text) => text },
+    },
+  };
+
+  const enable = () => commands.get("autotalk:on")("", ctx);
+  const disable = () => commands.get("autotalk:off")("", ctx);
+  const tick = () => t.mock.timers.tick(10_000);
+  const sendMemo = (text) => {
+    editorText = text;
+    t.mock.timers.tick(250); // Let the editor watcher observe the edit before the send tick.
+    tick();
+    assert.equal(editorText, "");
+  };
+
+  await enable();
+  tick();
+  tick();
+  assert.deepEqual(sentMessages, []);
+
+  const followUp = formatEmptyPrompt();
+  const first = formatThoughtMemo("First memo");
+  const second = formatThoughtMemo("Second memo");
+  const third = formatThoughtMemo("Third memo");
+  sendMemo("First memo");
+  assert.deepEqual(sentMessages, [first]);
+  tick();
+  assert.deepEqual(sentMessages, [first, followUp]);
+  tick();
+  tick();
+  assert.deepEqual(sentMessages, [first, followUp]);
+
+  sendMemo("Second memo");
+  tick();
+  assert.deepEqual(sentMessages, [first, followUp, second, followUp]);
+
+  sendMemo("Third memo");
+  await disable();
+  await enable();
+  tick();
+  tick();
+  assert.deepEqual(sentMessages, [first, followUp, second, followUp, third]);
+  await disable();
 });
 
 test("settings commands persist and reflect updates without changing timer behavior", async () => {
