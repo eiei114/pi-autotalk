@@ -148,8 +148,14 @@ export default function (pi: ExtensionAPI) {
     ctx: ExtensionCommandContext,
     restartTimers = false,
   ): Promise<void> {
+    try {
+      await saveSettings(nextSettings);
+    } catch {
+      ctx.ui.notify("Could not save AutoTalk settings. No changes applied.", "warning");
+      return;
+    }
+
     settings = nextSettings;
-    await saveSettings(settings);
     if (restartTimers && enabled) startTimers(ctx);
     updateStatus(ctx);
   }
