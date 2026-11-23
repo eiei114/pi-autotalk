@@ -1,5 +1,5 @@
 ﻿import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -400,4 +400,73 @@ test("settings commands persist and reflect updates without changing timer behav
     else process.env.USERPROFILE = originalUserProfile;
     await rm(home, { recursive: true, force: true });
   }
+});
+
+test("a failed settings save preserves the active timer, delivery mode, and footer", async (t) => {
+  t.mock.timers.enable({ apis: ["Date", "setInterval"], now: 1_000 });
+  const originalHome = process.env.HOME;
+  const originalUserProfile = process.env.USERPROFILE;
+  const home = await mkdtemp(join(tmpdir(), "pi-autotalk-home-"));
+  process.env.HOME = home;
+  process.env.USERPROFILE = home;
+  t.after(async () => {
+    if (originalHome === undefined) delete process.env.HOME;
+    else process.env.HOME = originalHome;
+    if (originalUserProfile === undefined) delete process.env.USERPROFILE;
+    else process.env.USERPROFILE = originalUserProfile;
+    await rm(home, { recursive: true, force: true });
+  });
+
+  // A directory at the settings file path makes the write fail without permission tricks.
+  await mkdir(join(home, ".pi", "agent", "extensions", "autotalk", "settings.json"), {
+    recursive: true,
+  });
+
+  const commands = new Map();
+  const statuses = [];
+  const notifications = [];
+  const sentMessages = [];
+  let editorText = "memo";
+  registerAutoTalk({
+    on() {},
+    registerCommand(name, options) {
+      commands.set(name, options.handler);
+    },
+    sendUserMessage: (...args) => sentMessages.push(args),
+  });
+
+  const ctx = {
+    hasUI: true,
+    isIdle: () => false,
+    ui: {
+      getEditorText: () => editorText,
+      setEditorText(text) {
+        editorText = text;
+      },
+      setStatus: (_key, status) => statuses.push(status),
+      theme: { fg: (_color, text) => text },
+      input: async () => "15",
+      select: async () => "steer",
+      notify: (...args) => notifications.push(args),
+    },
+  };
+
+  await commands.get("autotalk:on")("", ctx);
+  t.mock.timers.tick(5_000);
+  await commands.get("autotalk:settings")("", ctx);
+  assert.deepEqual(notifications, [
+    ["Could not save AutoTalk settings. No changes applied.", "warning"],
+  ]);
+  assert.deepEqual(statuses, ["AutoTalk on 10s followUp"]);
+
+  t.mock.timers.tick(4_999);
+  assert.deepEqual(sentMessages, []);
+  t.mock.timers.tick(1);
+  assert.deepEqual(sentMessages, [[formatThoughtMemo("memo"), { deliverAs: "followUp" }]]);
+
+  // A fresh footer render still reads the original live settings.
+  await commands.get("autotalk:off")("", ctx);
+  await commands.get("autotalk:on")("", ctx);
+  assert.equal(statuses.at(-1), "AutoTalk on 10s followUp");
+  await commands.get("autotalk:off")("", ctx);
 });
