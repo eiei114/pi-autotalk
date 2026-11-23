@@ -68,14 +68,14 @@ After sending a non-empty buffer, AutoTalk clears the editor only if the editor 
 
 ### Empty prompt
 
-If the editor is empty, AutoTalk sends a one-shot continuation prompt:
+After sending a non-empty memo, AutoTalk can send a one-shot continuation prompt when the editor is empty:
 
 ```text
 [AutoTalk]
 The editor is empty. From the conversation so far, ask one question to think about next.
 ```
 
-That empty prompt is sent only once. It resets after a real non-empty thought memo is sent.
+After that prompt, AutoTalk waits for another memo before sending a new continuation. Turning AutoTalk off and back on discards any pending continuation.
 
 ### Busy-agent delivery modes
 

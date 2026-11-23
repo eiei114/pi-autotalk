@@ -28,7 +28,7 @@ export default function (pi: ExtensionAPI) {
   let latestContext: ExtensionContext | undefined;
   let lastObservedEditorText = "";
   let lastInputChangeAt = Date.now();
-  let emptyPromptSent = false;
+  let emptyFollowUpPending = false;
   let sending = false;
 
   function updateStatus(ctx = latestContext): void {
@@ -98,12 +98,12 @@ export default function (pi: ExtensionAPI) {
     if (editorText.startsWith("/")) return;
 
     if (editorText.trim() === "") {
-      if (emptyPromptSent) return;
+      if (!emptyFollowUpPending) return;
 
       try {
         sending = true;
         sendUserMessage(ctx, formatEmptyPrompt());
-        emptyPromptSent = true;
+        emptyFollowUpPending = false;
       } finally {
         sending = false;
       }
@@ -115,7 +115,7 @@ export default function (pi: ExtensionAPI) {
     try {
       sending = true;
       sendUserMessage(ctx, formatThoughtMemo(textToSend));
-      emptyPromptSent = false;
+      emptyFollowUpPending = true;
 
       if (ctx.ui.getEditorText() === textToSend) {
         ctx.ui.setEditorText("");
@@ -158,7 +158,7 @@ export default function (pi: ExtensionAPI) {
     if (!requireUi(ctx)) return;
 
     enabled = true;
-    emptyPromptSent = false;
+    emptyFollowUpPending = false;
     startTimers(ctx);
     updateStatus(ctx);
   }
