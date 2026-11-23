@@ -65,13 +65,16 @@ export default function (pi: ExtensionAPI) {
     return current;
   }
 
-  function sendUserMessage(ctx: ExtensionContext, text: string): void {
-    if (ctx.isIdle()) {
-      pi.sendUserMessage(text);
-      return;
+  function trySendUserMessage(ctx: ExtensionContext, text: string): boolean {
+    const idle = ctx.isIdle();
+    try {
+      if (idle) pi.sendUserMessage(text);
+      else pi.sendUserMessage(text, { deliverAs: settings.deliveryMode });
+      return true;
+    } catch {
+      ctx.ui.notify("AutoTalk could not send the message.", "warning");
+      return false;
     }
-
-    pi.sendUserMessage(text, { deliverAs: settings.deliveryMode });
   }
 
   function startTimers(ctx: ExtensionContext): void {
@@ -102,8 +105,7 @@ export default function (pi: ExtensionAPI) {
 
       try {
         sending = true;
-        sendUserMessage(ctx, formatEmptyPrompt());
-        emptyFollowUpPending = false;
+        if (trySendUserMessage(ctx, formatEmptyPrompt())) emptyFollowUpPending = false;
       } finally {
         sending = false;
       }
@@ -114,7 +116,7 @@ export default function (pi: ExtensionAPI) {
 
     try {
       sending = true;
-      sendUserMessage(ctx, formatThoughtMemo(textToSend));
+      if (!trySendUserMessage(ctx, formatThoughtMemo(textToSend))) return;
       emptyFollowUpPending = true;
 
       if (ctx.ui.getEditorText() === textToSend) {

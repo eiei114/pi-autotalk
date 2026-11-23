@@ -324,6 +324,76 @@ test("empty-editor follow-ups require a new memo in the current enable cycle", a
   await disable();
 });
 
+for (const kind of ["memo", "empty follow-up"]) {
+  test(`a failed timer send retries the ${kind} on a later tick`, async (t) => {
+    t.mock.timers.enable({ apis: ["Date", "setInterval"] });
+    const commands = new Map();
+    const notifications = [];
+    const attempts = [];
+    const sentMessages = [];
+    const draft = "Private draft";
+    const memo = formatThoughtMemo(draft);
+    const followUp = formatEmptyPrompt();
+    let editorText = draft;
+    let failNext = kind === "memo";
+
+    registerAutoTalk({
+      on() {},
+      registerCommand(name, options) {
+        commands.set(name, options.handler);
+      },
+      sendUserMessage(text) {
+        attempts.push(text);
+        if (failNext) {
+          failNext = false;
+          throw new Error(`Failed to deliver ${text}`);
+        }
+        sentMessages.push(text);
+      },
+    });
+
+    const ctx = {
+      hasUI: true,
+      isIdle: () => kind === "memo",
+      ui: {
+        getEditorText: () => editorText,
+        setEditorText(text) {
+          editorText = text;
+        },
+        setStatus() {},
+        theme: { fg: (_color, text) => text },
+        notify: (...args) => notifications.push(args),
+      },
+    };
+
+    await commands.get("autotalk:on")("", ctx);
+    const tick = () => t.mock.timers.tick(10_000);
+    const isMemo = kind === "memo";
+    if (!isMemo) {
+      tick(); // Successfully send a memo to arm the empty follow-up.
+      assert.equal(editorText, "");
+      failNext = true;
+    }
+
+    tick();
+    // Let node:test observe any unhandled rejection from the timer callback.
+    await new Promise((resolve) => setImmediate(resolve));
+    assert.equal(editorText, isMemo ? draft : "");
+    assert.deepEqual(sentMessages, isMemo ? [] : [memo]);
+    assert.deepEqual(notifications, [["AutoTalk could not send the message.", "warning"]]);
+
+    tick();
+    assert.equal(editorText, "");
+    assert.deepEqual(sentMessages, isMemo ? [memo] : [memo, followUp]);
+    assert.deepEqual(attempts, isMemo ? [memo, memo] : [memo, followUp, followUp]);
+    if (!isMemo) {
+      tick();
+      assert.deepEqual(attempts, [memo, followUp, followUp]);
+    }
+    await commands.get("autotalk:off")("", ctx);
+  });
+}
+
 test("settings commands persist and reflect updates without changing timer behavior", async () => {
   const originalNow = Date.now;
   const originalSetInterval = globalThis.setInterval;
