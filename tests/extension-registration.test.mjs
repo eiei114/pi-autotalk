@@ -255,6 +255,59 @@ test("a due tick preserves slash commands and still sends ordinary editor text",
   }
 });
 
+test("a successful send preserves an editor draft replaced during delivery", async (t) => {
+  t.mock.timers.enable({ apis: ["Date", "setInterval"], now: 1_000 });
+  const commands = new Map();
+  const sentMessages = [];
+  const editorWrites = [];
+  const originalDraft = "Original memo";
+  const replacementDraft = "  Updated memo\r\n\t次の案  \n";
+  let editorText = originalDraft;
+
+  registerAutoTalk({
+    on() {},
+    registerCommand(name, options) {
+      commands.set(name, options.handler);
+    },
+    sendUserMessage(text) {
+      sentMessages.push(text);
+      if (sentMessages.length === 1) editorText = replacementDraft;
+    },
+  });
+
+  const ctx = {
+    hasUI: true,
+    isIdle: () => true,
+    ui: {
+      getEditorText: () => editorText,
+      setEditorText(text) {
+        editorWrites.push(text);
+        editorText = text;
+      },
+      setStatus() {},
+      theme: { fg: (_color, text) => text },
+    },
+  };
+
+  await commands.get("autotalk:on")("", ctx);
+  try {
+    t.mock.timers.tick(10_000);
+    assert.deepEqual(sentMessages, [formatThoughtMemo(originalDraft)]);
+    assert.deepEqual(editorWrites, []);
+    assert.equal(editorText, replacementDraft);
+
+    t.mock.timers.tick(10_000);
+    assert.deepEqual(sentMessages, [
+      formatThoughtMemo(originalDraft),
+      formatThoughtMemo(replacementDraft),
+    ]);
+    assert.deepEqual(editorWrites, [""]);
+    assert.equal(editorText, "");
+  } finally {
+    await commands.get("autotalk:off")("", ctx);
+  }
+});
+
 test("empty-editor follow-ups require a new memo in the current enable cycle", async (t) => {
   t.mock.timers.enable({ apis: ["Date", "setInterval"] });
   const commands = new Map();
